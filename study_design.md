@@ -30,6 +30,8 @@ Written before the runs, so the go/no-go rule cannot be fitted to the results.
 - **Phase C.** 3 FS slots against 6 slots, and slot dropout in training; scored overall and for studies missing sagittal or coronal FS.
 - **Limits fixed in advance.** No patient identifier exists, so splits are by study. Gold labels are used for final scoring only, never for choosing settings.
 
+**Note added 2026-11-14, after the A2 result and before the oracle result.** The A4 rule above stays as written. But centre-weighted placement at 18 windows, with no selector, scored 0.871 AUC against 0.890 for 72 evenly spaced windows, already inside the 0.02 line. Passing A4 therefore cannot by itself justify Phase B. Phase B will go ahead only if the oracle at 18 windows also beats centre-weighted placement at 18 windows by more than the 0.01 tie margin in concordance, paired as usual. Centre-weighted placement becomes the baseline every selector must beat, and it will be checked on all 5 folds.
+
 ## Factors
 
 **A. Encoder kind**

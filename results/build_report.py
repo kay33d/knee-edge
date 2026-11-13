@@ -237,6 +237,104 @@ def timing_section():
     return table(header, rows), four
 
 
+FOLD_RUNS = {"ConvNeXt-Atto": {0: ("small_fold0/convnext_atto", "stage3_atto_fold0/convnext_atto@eval")},
+             "ConvNeXt-Tiny, transformer head": {0: ("stage3_tiny_a_fold0/convnext_tiny@tf", None)}}
+for _f in range(1, 5):
+    FOLD_RUNS["ConvNeXt-Atto"][_f] = (f"stage5_fold{_f}/convnext_atto", None)
+    FOLD_RUNS["ConvNeXt-Tiny, transformer head"][_f] = (f"stage5_fold{_f}/convnext_tiny@tf", None)
+
+
+def fold_scores():
+    """{model: {fold: {c, auc, c36, c18}}} from each run's last epoch (the EMA weights it saves) and its window scoring."""
+    out = {}
+    for model, folds in FOLD_RUNS.items():
+        for fold, (train, windows) in folds.items():
+            r, w = read_json(f"{R}/{train}/pilot_report.json"), read_json(f"{R}/{windows or train}/pilot_report.json")
+            if not r or not w or "epochs" not in r or "36" not in w.get("eval_windows", {}):
+                continue
+            last = r["epochs"][-1]
+            out.setdefault(model, {})[fold] = {"c": last["within_scanner_c"], "auc": last["auc_thresholded"],
+                                               "c36": w["eval_windows"]["36"]["within_scanner_c"], "c18": w["eval_windows"]["18"]["within_scanner_c"]}
+    return out
+
+
+def stage5_section(scores):
+    if not scores or any(len(v) < 5 for v in scores.values()):
+        return None, None
+    rows = []
+    for model, folds in scores.items():
+        for key, label in (("c", "Concordance, 72 windows"), ("auc", "AUC, 72 windows"), ("c36", "Concordance, 36 windows"), ("c18", "Concordance, 18 windows")):
+            v = np.array([folds[f][key] for f in range(5)])
+            rows.append([model, label] + [f"{x:.4f}" for x in v] + [f"{v.mean():.4f} ± {v.std(ddof=1):.4f}"])
+    a, b = scores["ConvNeXt-Atto"], scores["ConvNeXt-Tiny, transformer head"]
+    gap = np.array([b[f]["c"] - a[f]["c"] for f in range(5)])
+    loss18 = {m: np.array([s[f]["c18"] - s[f]["c"] for f in range(5)]) for m, s in scores.items()}
+    return table(["Model", "Score"] + [f"Fold {f}" for f in range(5)] + ["Mean ± SD"], rows), {"gap": gap, "loss18": loss18}
+
+
+def gold_section():
+    """Gold AUC of each saved model, paired with the LLM labels' own AUC on the same gold studies."""
+    import glob
+    from sklearn.metrics import roc_auc_score
+
+    found = {}
+    for path in sorted(glob.glob(f"{R}/phasea_*_fold0/*/pilot_report.json")):
+        rep = read_json(path)
+        preds = os.path.join(os.path.dirname(path), "gold_predictions.csv")
+        if rep and "gold" in rep and os.path.exists(preds):
+            found[os.path.basename(os.path.dirname(path))] = (rep["gold"], preds)
+    if not found:
+        return None, None
+    gold = pd.read_csv(f"{ROOT}/data_meta/train.csv", dtype={"StudyInstanceUID": str})
+    gold = gold[gold[NAMES].notna().any(axis=1)].set_index("StudyInstanceUID")
+    llm = pd.read_csv(f"{ROOT}/data_meta/pilkwang/report_labels_v2.csv", dtype={"StudyInstanceUID": str}).set_index("StudyInstanceUID")
+    common = sorted(set(gold.index) & set(llm.index))
+    y, q = gold.loc[common, NAMES].to_numpy(float), llm.loc[common, NAMES].to_numpy(float)
+
+    def macro(p, idx):
+        each = []
+        for c in range(len(NAMES)):
+            t = y[idx, c]
+            keep = ~np.isnan(t)
+            each.append(roc_auc_score(t[keep] > 0.5, p[idx, c][keep]) if 0 < (t[keep] > 0.5).sum() < keep.sum() else np.nan)
+        return float(np.nanmean(each))
+
+    rng = np.random.default_rng(0)
+    picks = [rng.choice(len(common), len(common)) for _ in range(DRAWS)]
+    full = np.arange(len(common))
+    names = {"convnext_atto@oracle": "ConvNeXt-Atto", "convnext_tiny@gold": "ConvNeXt-Tiny", "convnext_tiny@tf_gold": "ConvNeXt-Tiny, transformer head"}
+    rows, worst, paired = [], {}, {}
+    rows.append(["LLM report labels (training labels)", len(common), f"{macro(q, full):.4f}", "-", "reference"])
+    for key, (rep, preds) in found.items():
+        p = pd.read_csv(preds, dtype={"StudyInstanceUID": str}).set_index("StudyInstanceUID").loc[common, NAMES].to_numpy(float)
+        d = np.array([macro(p, i) - macro(q, i) for i in picks])
+        ci = rep["macro_auc_95"]
+        rows.append([names.get(key, key), rep["studies"], f"{rep['macro_auc']:.4f}", f"{ci[0]:.3f} to {ci[1]:.3f}",
+                     f"{signed(macro(p, full) - macro(q, full))} ({span([np.percentile(d, 2.5), np.percentile(d, 97.5)])})"])
+        worst[names.get(key, key)] = sorted(rep["per_finding_auc"].items(), key=lambda kv: kv[1])[:2]
+        paired[names.get(key, key)] = (macro(p, full) - macro(q, full), float(np.percentile(d, 2.5)), float(np.percentile(d, 97.5)), rep["macro_auc"])
+    header = ["Scored", "Gold studies", "Macro AUC", "95% interval", f"Against LLM labels on the {len(common)} shared studies (95% interval)"]
+    return table(header, rows), (worst, paired, len(common), macro(q, full))
+
+
+SAMPLING_ORDER = ["uniform, trained on 48", "random, trained on 48", "centre, trained on 48", "uniform, trained at budget",
+                  "oracle, top by attention per slot", "oracle, top by attention per study", "dense, all windows"]
+
+
+def sampling_section():
+    summary = read_json(f"{R}/phasea_summary.json")
+    if not summary or not summary.get("arms"):
+        return None, None
+    rows = []
+    arms = summary["arms"]
+    for label in sorted(arms, key=lambda k: (-arms[k]["windows"], SAMPLING_ORDER.index(k.split(" [")[0]) if k.split(" [")[0] in SAMPLING_ORDER else 99)):
+        v = arms[label]
+        shown = label.split(" [")[0].replace("uniform", "evenly spaced").replace("centre,", "centre-weighted,")
+        rows.append([shown, v["windows"], f"{v['c']:.4f}", "reference" if v["c_diff_ci"] == [0.0, 0.0] else f"{signed(v['c_diff'])} ({span(v['c_diff_ci'])})",
+                     f"{v['auc']:.4f}", signed(v["menisci_c_diff"])])
+    return table(["Window placement", "Windows", "Concordance", "Against 72 evenly spaced (95% interval)", "AUC", "Menisci change"], rows), arms
+
+
 def main():
     score = Scorer(f"{R}/stage3_atto_fold0/convnext_atto@eval/val_predictions.csv")
     s1 = stage1_section()
@@ -246,6 +344,9 @@ def main():
     s4, sizes = stage4_section(summary) if summary else (NOT_YET, NOT_YET)
     seeds, seed_diffs = seed_section(score)
     timing, t4 = timing_section()
+    s5, s5_stats = stage5_section(fold_scores())
+    gold, gold_info = gold_section()
+    sampling, arms = sampling_section()
 
     best_cnn = max((v for v in s2_scores.values() if v[1] not in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
     best_other = max((v for v in s2_scores.values() if v[1] in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
@@ -279,6 +380,29 @@ def main():
                    if t4 else "")
     head_line = (f"- **Transformer head.** On ConvNeXt-Tiny it scored {signed(seed_diffs[0])} and {signed(seed_diffs[1])} against the attention head in two training seeds, on the edge of the 0.01 tie margin.\n"
                  if seed_diffs else "")
+    fold_line = ""
+    if s5_stats:
+        g, l18 = s5_stats["gap"], s5_stats["loss18"]["ConvNeXt-Atto"]
+        fold_line = (f"- **Five folds.** ConvNeXt-Tiny with the transformer head beat ConvNeXt-Atto on all 5 folds, by {g.mean():+.3f} on average "
+                     f"(range {g.min():+.3f} to {g.max():+.3f}), at about 10 times the CPU time. The same model varies by up to "
+                     f"{max(np.ptp([v['c'] for v in s.values()]) for s in fold_scores().values()):.3f} between folds, so single-fold gaps under about 0.01 should not be read as real. "
+                     f"Cutting Atto to 18 evenly spaced windows cost {l18.min():+.3f} to {l18.max():+.3f} on every fold.\n")
+    gold_line = ""
+    if gold:
+        worst, paired, n_common, llm_auc = gold_info
+        above = all(v[1] > 0 for v in paired.values())
+        gold_line = (f"- **Radiologist labels.** On the 58 gold studies, which no training or selection used, macro AUC against the official labels was "
+                     + "; ".join(f"{k} {v[3]:.3f}" for k, v in paired.items())
+                     + f". The LLM report labels the models were trained on score {llm_auc:.3f}. Paired on the {n_common} studies that have both, the models are ahead of their training labels by "
+                     + "; ".join(f"{signed(v[0])} ({span(v[1:3])}) for {k}" for k, v in paired.items())
+                     + (". So the models do better than the labels they learned from, though the intervals come close to zero. " if above else ". Not every interval excludes zero. ")
+                     + "The weakest findings are " + " and ".join(sorted({n for v in worst.values() for n, _ in v})) + " (section 10).\n")
+    place_line = ""
+    if arms and "centre, trained on 48 [18]" in arms:
+        u18, c18, c36 = arms["uniform, trained on 48 [18]"], arms["centre, trained on 48 [18]"], arms["centre, trained on 48 [36]"]
+        place_line = (f"- **Where the windows go.** With 18 windows, placing them towards the middle of each series cut Atto's loss from {signed(u18['c_diff'])} to "
+                      f"{signed(c18['c_diff'])}, and the menisci loss from {signed(u18['menisci_c_diff'])} to {signed(c18['menisci_c_diff'])}, with no retraining. "
+                      f"With 36 centre-weighted windows Atto matched 72 evenly spaced ones ({signed(c36['c_diff'])}), at half the CPU time. Fold 0 only (section 11).\n")
     text = f"""# CPU-deployable knee MRI classification: project report
 
 Last rebuilt {date.today().isoformat()} by `results/build_report.py`. Tables and headline figures come from the result files. Fold 0, one training seed unless stated. Research work, not a clinical tool.
@@ -295,7 +419,7 @@ Where things stand:
 {int8_line('ConvNeXt-Atto', atto)}
 {int8_line('ConvNeXt-Tiny', tiny)}
 {int8_line('ConvNeXt-Tiny, transformer head', tf)}
-{timing_line}{head_line}{qat_line}
+{timing_line}{head_line}{qat_line}{fold_line}{gold_line}{place_line}
 ## 2. Questions
 
 | ID | Hypothesis | Status |
@@ -303,7 +427,8 @@ Where things stand:
 | H1 | At equal CPU latency, hybrid and ViT encoders do not beat modern CNNs by more than the noise margin | Supported in fold 0: at the same latency as ConvNeXt-Tiny, CoAtNet-0 ties it, and DINOv2-Small is slower and scores lower (sections 5 and 8) |
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | {'Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7)' if have_qat else 'In progress: post-training INT8 measured, QAT running'} |
-| H4 | Label quality moves AUC more than encoder choice | Stage 5, not started |
+| H4 | Label quality moves AUC more than encoder choice | Not tested yet: needs a second label set |
+| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | {'Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11)' if place_line else 'Running (section 11)'} |
 
 ## 3. Method
 
@@ -369,20 +494,43 @@ The 6-core limit was not faster than the 4-core one: ConvNeXt-Tiny took about th
 
 {'' if timing else 'Pending. A first attempt was discarded because other applications loaded the laptop: the same encoder varied by up to 2x. It will be repeated on an idle machine with 5 separate timing processes per encoder. That run also covers CoAtNet-0 at 256 px and R3D-18 at 192 px, and INT8 encoders.'}
 
-## 9. Limits
+## 9. Five folds
 
-- One fold and mostly one seed. Close models cannot be separated.
+The two finalists, trained from scratch on each of the 5 folds with the Stage 2 setting. Each fold scores a different 870 studies, so scores are not paired across folds. Fold 0 is the run used in the earlier sections.
+
+{s5 or 'Running: folds 1-4 for ConvNeXt-Atto and ConvNeXt-Tiny with the transformer head.'}
+
+## 10. Radiologist gold labels
+
+Saved fold 0 models scored on the 58 gold studies against the official radiologist labels. The 95% interval resamples studies (2,000 draws). The last column pairs each model with the LLM report labels, used as scores, on the same studies (500 draws). Both are AUC against the official labels.
+
+{gold or 'Not scored yet.'}
+
+## 11. Window placement (Phase A, fold 0)
+
+ConvNeXt-Atto trained on 48 windows, then scored with windows placed in different ways. "Evenly spaced" is the Stage 2 placement. "Centre-weighted" packs windows towards the middle of each series. "Random" draws positions at random with a fixed seed. "Trained at budget" retrains with the same number of windows it is scored with. "Oracle" scores all 144 windows, then keeps the ones the model's attention ranks highest. It is an upper bound for any selector that imitates the model, not a usable method, because it costs the full dense pass. Menisci change is the mean concordance change for the two menisci.
+
+{sampling or 'Running.'}
+
+The adaptive-selection plan in `study_design.md` set a go/no-go rule before these runs: build a learned selector only if the oracle at 18 windows comes within 0.02 AUC of 72 evenly spaced windows. Centre-weighted placement at 18 windows already comes close to that line without any selector, so a learned selector is worth building only if the oracle beats centre-weighted placement clearly.
+
+## 12. Limits
+
+- Most comparisons use one fold and one seed. Folds differ by up to about 0.02 for the same model, so close models cannot be separated without the five-fold runs.
 - Timing describes this laptop under Docker limits, not a Raspberry Pi or Jetson, because Docker can limit cores and memory but not device speed.
 - INT8 speed depends on the CPU. This one has no VNNI instructions, so INT8 gives little or no speed-up; CPUs with VNNI or ARM dot-product instructions usually gain more.
-- Labels come from reports through an LLM, so concordance and calibration measure agreement with those labels. The 58 gold studies and external sets are for the final models.
+- Labels come from reports through an LLM, so concordance and calibration measure agreement with those labels. Only 58 studies have radiologist labels, which makes gold intervals wide.
+- The data has study IDs but no patient IDs, so two studies of the same patient could fall in different folds.
 - The 2.5D and 3D comparison mixes in resolution and pretraining differences.
 - The QAT tested is simple: 3 epochs of fine-tuning, with the ranges it learns discarded before conversion. A fuller version that keeps them might close the small remaining gap.
 - Study-level data, labels and trained weights are not published here. The MIRA agreement limits redistribution, and whether trained weights count as derivatives still needs asking RSNA.
 
-## 10. Next steps
+## 13. Next steps
 
-1. Choose finalists on accuracy against measured CPU cost: ConvNeXt-Atto as the cheap option and ConvNeXt-Tiny with the transformer head as the most accurate are the likely pair.
-2. Stage 5: all folds for 2-3 finalists, a second label set for H4, gold-study and external checks.
+1. Finish Phase A: the oracle run and the runs trained at each window budget.
+2. Check centre-weighted placement on all 5 folds, since it is now the baseline any selector must beat.
+3. Build the learned window selector (Phase B) only if the oracle clearly beats centre-weighted placement.
+4. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
 """
     os.makedirs(f"{ROOT}/docs", exist_ok=True)
     with open(f"{ROOT}/docs/project_report.md", "w", encoding="utf-8", newline="\n") as handle:

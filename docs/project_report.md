@@ -1,6 +1,6 @@
 # CPU-deployable knee MRI classification: project report
 
-Last rebuilt 2026-11-13 by `results/build_report.py`. Tables and headline figures come from the result files. Fold 0, one training seed unless stated. Research work, not a clinical tool.
+Last rebuilt 2026-11-14 by `results/build_report.py`. Tables and headline figures come from the result files. Fold 0, one training seed unless stated. Research work, not a clinical tool.
 
 ## 1. Summary
 
@@ -17,6 +17,9 @@ Where things stand:
 - **CPU cost.** On 4 cores, FP32, 72 windows: ConvNeXt-Atto 0.96 s, ConvNeXt-Tiny 9.88 s, CoAtNet-0 9.40 s, DINOv2-Small 11.56 s, R3D-18 25.21 s. Every model is far inside the 80 s and 1.5 GB targets. INT8 gained little speed on this CPU: Tiny took 7.79 s with Conv and MatMul conversion, about a fifth faster, and Atto became slower (1.65 s). The laptop's CPU lacks VNNI instructions, so 8-bit products are not much cheaper than 32-bit ones here. INT8 still cuts encoder file size by about 4x and peak memory by 20-40%.
 - **Transformer head.** On ConvNeXt-Tiny it scored +0.009 and +0.010 against the attention head in two training seeds, on the edge of the 0.01 tie margin.
 - **Quantization-aware training.** It did not reduce the INT8 loss. With Conv and MatMul conversion and percentile ranges, QAT weights scored Atto -0.001 against -0.000, Tiny -0.005 against -0.001, Tiny with transformer head -0.007 against -0.004 without QAT, all against FP32. With ONNX Runtime's default conversion and MinMax ranges, QAT helped Atto slightly but made both Tiny models worse (Atto -0.003 against -0.007, Tiny -0.045 against -0.034, Tiny with transformer head -0.050 against -0.033). Calibration after the core conversion was similar. This QAT is a simple version (3 epochs, learned ranges discarded), so a fuller version could still do better.
+- **Five folds.** ConvNeXt-Tiny with the transformer head beat ConvNeXt-Atto on all 5 folds, by +0.010 on average (range +0.005 to +0.017), at about 10 times the CPU time. The same model varies by up to 0.024 between folds, so single-fold gaps under about 0.01 should not be read as real. Cutting Atto to 18 evenly spaced windows cost -0.055 to -0.047 on every fold.
+- **Radiologist labels.** On the 58 gold studies, which no training or selection used, macro AUC against the official labels was ConvNeXt-Tiny 0.895; ConvNeXt-Tiny, transformer head 0.906. The LLM report labels the models were trained on score 0.870. Paired on the 57 studies that have both, the models are ahead of their training labels by +0.028 (+0.001 to +0.056) for ConvNeXt-Tiny; +0.038 (+0.008 to +0.067) for ConvNeXt-Tiny, transformer head. So the models do better than the labels they learned from, though the intervals come close to zero. The weakest findings are Lateral OA and Synovitis (section 10).
+- **Where the windows go.** With 18 windows, placing them towards the middle of each series cut Atto's loss from -0.055 to -0.015, and the menisci loss from -0.102 to -0.019, with no retraining. With 36 centre-weighted windows Atto matched 72 evenly spaced ones (+0.001), at half the CPU time. Fold 0 only (section 11).
 
 ## 2. Questions
 
@@ -25,7 +28,8 @@ Where things stand:
 | H1 | At equal CPU latency, hybrid and ViT encoders do not beat modern CNNs by more than the noise margin | Supported in fold 0: at the same latency as ConvNeXt-Tiny, CoAtNet-0 ties it, and DINOv2-Small is slower and scores lower (sections 5 and 8) |
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7) |
-| H4 | Label quality moves AUC more than encoder choice | Stage 5, not started |
+| H4 | Label quality moves AUC more than encoder choice | Not tested yet: needs a second label set |
+| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11) |
 
 ## 3. Method
 
@@ -203,17 +207,63 @@ The 6-core limit was not faster than the 4-core one: ConvNeXt-Tiny took about th
 
 
 
-## 9. Limits
+## 9. Five folds
 
-- One fold and mostly one seed. Close models cannot be separated.
+The two finalists, trained from scratch on each of the 5 folds with the Stage 2 setting. Each fold scores a different 870 studies, so scores are not paired across folds. Fold 0 is the run used in the earlier sections.
+
+| Model | Score | Fold 0 | Fold 1 | Fold 2 | Fold 3 | Fold 4 | Mean ± SD |
+|---|---|---|---|---|---|---|---|
+| ConvNeXt-Atto | Concordance, 72 windows | 0.8373 | 0.8407 | 0.8393 | 0.8326 | 0.8564 | 0.8413 ± 0.0090 |
+| ConvNeXt-Atto | AUC, 72 windows | 0.8897 | 0.8755 | 0.8865 | 0.8724 | 0.8946 | 0.8837 ± 0.0095 |
+| ConvNeXt-Atto | Concordance, 36 windows | 0.8309 | 0.8270 | 0.8299 | 0.8193 | 0.8430 | 0.8300 ± 0.0086 |
+| ConvNeXt-Atto | Concordance, 18 windows | 0.7821 | 0.7899 | 0.7922 | 0.7773 | 0.8098 | 0.7903 ± 0.0125 |
+| ConvNeXt-Tiny, transformer head | Concordance, 72 windows | 0.8505 | 0.8576 | 0.8491 | 0.8393 | 0.8619 | 0.8517 ± 0.0087 |
+| ConvNeXt-Tiny, transformer head | AUC, 72 windows | 0.8971 | 0.8925 | 0.9003 | 0.8876 | 0.9012 | 0.8957 ± 0.0057 |
+| ConvNeXt-Tiny, transformer head | Concordance, 36 windows | 0.8348 | 0.8440 | 0.8417 | 0.8297 | 0.8519 | 0.8404 ± 0.0086 |
+| ConvNeXt-Tiny, transformer head | Concordance, 18 windows | 0.7969 | 0.7977 | 0.7973 | 0.7805 | 0.8007 | 0.7946 ± 0.0080 |
+
+## 10. Radiologist gold labels
+
+Saved fold 0 models scored on the 58 gold studies against the official radiologist labels. The 95% interval resamples studies (2,000 draws). The last column pairs each model with the LLM report labels, used as scores, on the same studies (500 draws). Both are AUC against the official labels.
+
+| Scored | Gold studies | Macro AUC | 95% interval | Against LLM labels on the 57 shared studies (95% interval) |
+|---|---|---|---|---|
+| LLM report labels (training labels) | 57 | 0.8700 | - | reference |
+| ConvNeXt-Tiny | 58 | 0.8955 | 0.860 to 0.926 | +0.028 (+0.001 to +0.056) |
+| ConvNeXt-Tiny, transformer head | 58 | 0.9060 | 0.874 to 0.933 | +0.038 (+0.008 to +0.067) |
+
+## 11. Window placement (Phase A, fold 0)
+
+ConvNeXt-Atto trained on 48 windows, then scored with windows placed in different ways. "Evenly spaced" is the Stage 2 placement. "Centre-weighted" packs windows towards the middle of each series. "Random" draws positions at random with a fixed seed. "Trained at budget" retrains with the same number of windows it is scored with. "Oracle" scores all 144 windows, then keeps the ones the model's attention ranks highest. It is an upper bound for any selector that imitates the model, not a usable method, because it costs the full dense pass. Menisci change is the mean concordance change for the two menisci.
+
+| Window placement | Windows | Concordance | Against 72 evenly spaced (95% interval) | AUC | Menisci change |
+|---|---|---|---|---|---|
+| evenly spaced, trained on 48 | 72 | 0.8373 | reference | 0.8897 | +0.000 |
+| random, trained on 48 | 72 | 0.8320 | -0.005 (-0.012 to +0.002) | 0.8809 | -0.007 |
+| centre-weighted, trained on 48 | 72 | 0.8408 | +0.004 (-0.004 to +0.010) | 0.8898 | +0.005 |
+| evenly spaced, trained on 48 | 36 | 0.8309 | -0.006 (-0.012 to +0.001) | 0.8787 | -0.011 |
+| random, trained on 48 | 36 | 0.8185 | -0.019 (-0.029 to -0.011) | 0.8713 | -0.020 |
+| centre-weighted, trained on 48 | 36 | 0.8388 | +0.001 (-0.005 to +0.008) | 0.8880 | -0.004 |
+| evenly spaced, trained on 48 | 18 | 0.7821 | -0.055 (-0.068 to -0.043) | 0.8344 | -0.102 |
+| random, trained on 48 | 18 | 0.8012 | -0.036 (-0.049 to -0.024) | 0.8446 | -0.046 |
+| centre-weighted, trained on 48 | 18 | 0.8224 | -0.015 (-0.025 to -0.007) | 0.8705 | -0.019 |
+
+The adaptive-selection plan in `study_design.md` set a go/no-go rule before these runs: build a learned selector only if the oracle at 18 windows comes within 0.02 AUC of 72 evenly spaced windows. Centre-weighted placement at 18 windows already comes close to that line without any selector, so a learned selector is worth building only if the oracle beats centre-weighted placement clearly.
+
+## 12. Limits
+
+- Most comparisons use one fold and one seed. Folds differ by up to about 0.02 for the same model, so close models cannot be separated without the five-fold runs.
 - Timing describes this laptop under Docker limits, not a Raspberry Pi or Jetson, because Docker can limit cores and memory but not device speed.
 - INT8 speed depends on the CPU. This one has no VNNI instructions, so INT8 gives little or no speed-up; CPUs with VNNI or ARM dot-product instructions usually gain more.
-- Labels come from reports through an LLM, so concordance and calibration measure agreement with those labels. The 58 gold studies and external sets are for the final models.
+- Labels come from reports through an LLM, so concordance and calibration measure agreement with those labels. Only 58 studies have radiologist labels, which makes gold intervals wide.
+- The data has study IDs but no patient IDs, so two studies of the same patient could fall in different folds.
 - The 2.5D and 3D comparison mixes in resolution and pretraining differences.
 - The QAT tested is simple: 3 epochs of fine-tuning, with the ranges it learns discarded before conversion. A fuller version that keeps them might close the small remaining gap.
 - Study-level data, labels and trained weights are not published here. The MIRA agreement limits redistribution, and whether trained weights count as derivatives still needs asking RSNA.
 
-## 10. Next steps
+## 13. Next steps
 
-1. Choose finalists on accuracy against measured CPU cost: ConvNeXt-Atto as the cheap option and ConvNeXt-Tiny with the transformer head as the most accurate are the likely pair.
-2. Stage 5: all folds for 2-3 finalists, a second label set for H4, gold-study and external checks.
+1. Finish Phase A: the oracle run and the runs trained at each window budget.
+2. Check centre-weighted placement on all 5 folds, since it is now the baseline any selector must beat.
+3. Build the learned window selector (Phase B) only if the oracle clearly beats centre-weighted placement.
+4. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
