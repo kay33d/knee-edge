@@ -1,0 +1,141 @@
+{
+  "reference": "ConvNeXt-Atto, 72 uniform windows (Stage 3 scoring of the Stage 2 model)",
+  "studies": 870,
+  "subgroup_sizes": {
+    "all FS planes": 789,
+    "no sagittal FS": 49,
+    "no coronal FS": 32
+  },
+  "arms": {
+    "uniform, trained on 48 [18]": {
+      "windows": 18,
+      "c": 0.7821,
+      "c_diff": -0.0552,
+      "c_diff_ci": [
+        -0.068,
+        -0.0432
+      ],
+      "auc": 0.8344,
+      "menisci_c_diff": -0.102,
+      "menisci_c_diff_ci": [
+        -0.1244,
+        -0.0829
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0421,
+        "MCL": -0.077,
+        "Medial Meniscus": -0.1231,
+        "Lateral Meniscus": -0.081,
+        "Medial OA": -0.0261,
+        "Lateral OA": -0.0526,
+        "PF OA": -0.0238,
+        "Effusion": -0.0476,
+        "Synovitis": -0.0511,
+        "Baker's": -0.0463,
+        "Contusion": -0.0608,
+        "Fracture": -0.031
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8409,
+          "auc_diff": -0.0524
+        },
+        "no sagittal FS": {
+          "auc": 0.7854,
+          "auc_diff": -0.0714
+        },
+        "no coronal FS": {
+          "auc": 0.7666,
+          "auc_diff": -0.0757
+        }
+      }
+    },
+    "uniform, trained on 48 [36]": {
+      "windows": 36,
+      "c": 0.8309,
+      "c_diff": -0.0065,
+      "c_diff_ci": [
+        -0.0124,
+        0.0005
+      ],
+      "auc": 0.8787,
+      "menisci_c_diff": -0.0108,
+      "menisci_c_diff_ci": [
+        -0.0217,
+        0.0009
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0423,
+        "MCL": -0.0057,
+        "Medial Meniscus": -0.0046,
+        "Lateral Meniscus": -0.017,
+        "Medial OA": -0.0087,
+        "Lateral OA": -0.0081,
+        "PF OA": 0.0018,
+        "Effusion": -0.0057,
+        "Synovitis": 0.0036,
+        "Baker's": 0.0055,
+        "Contusion": -0.0094,
+        "Fracture": 0.0128
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8836,
+          "auc_diff": -0.0097
+        },
+        "no sagittal FS": {
+          "auc": 0.8494,
+          "auc_diff": -0.0074
+        },
+        "no coronal FS": {
+          "auc": 0.8078,
+          "auc_diff": -0.0345
+        }
+      }
+    },
+    "uniform, trained on 48 [72]": {
+      "windows": 72,
+      "c": 0.8373,
+      "c_diff": 0.0,
+      "c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "auc": 0.8897,
+      "menisci_c_diff": 0.0,
+      "menisci_c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0,
+        "MCL": 0.0,
+        "Medial Meniscus": 0.0,
+        "Lateral Meniscus": 0.0,
+        "Medial OA": 0.0,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0,
+        "Effusion": 0.0,
+        "Synovitis": 0.0,
+        "Baker's": 0.0,
+        "Contusion": 0.0,
+        "Fracture": 0.0
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8933,
+          "auc_diff": 0.0
+        },
+        "no sagittal FS": {
+          "auc": 0.8568,
+          "auc_diff": 0.0
+        },
+        "no coronal FS": {
+          "auc": 0.8423,
+          "auc_diff": 0.0
+        }
+      }
+    }
+  },
+  "gold": {}
+}
