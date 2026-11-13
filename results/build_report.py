@@ -215,15 +215,26 @@ def seed_section(score):
 
 
 def timing_section():
-    rows = []
-    for profile, label in (("pi5-class", "4 cores"), ("orin-class-cpu", "6 cores")):
+    """One row per model at full input (72 windows, or 6 clips for 3D), both limits side by side. Returns (table, {label: seconds at 4 cores})."""
+    found = {}
+    for profile in ("pi5-class", "orin-class-cpu"):
         for r in read_json(f"{R}/stage3_timing_{profile}.json") or []:
-            if "error" in r:
+            if "error" in r or r["windows"] not in (72, "6 clips of 32"):
                 continue
-            rows.append([r["label"], label, r["windows"], r.get("precision", "fp32"), r["encoder_s"], r["head_s"], r["total_s"], f"{r['total_range_s'][0]}-{r['total_range_s'][1]}"])
-    if not rows:
-        return None
-    return table(["Model", "Limit", "Windows", "Precision", "Encoder s", "Head s", "Total s per study", "Range over repeats"], rows)
+            found.setdefault(r["label"], {})[profile] = r
+    if not found:
+        return None, {}
+    rows, four = [], {}
+    for label, by in found.items():
+        a, b = by.get("pi5-class"), by.get("orin-class-cpu")
+        first = a or b
+        cell = lambda r: f"{r['total_s']:.2f} ({r['total_range_s'][0]:.2f}-{r['total_range_s'][1]:.2f})" if r else "-"
+        peak = max(r["encoder_peak_rss_mb"] for r in (a, b) if r)
+        rows.append([label, first["backbone"], first.get("precision", "fp32").upper(), cell(a), cell(b), f"{peak:.0f}", f"{first['encoder_mb']:.1f}"])
+        if a:
+            four[label] = a["total_s"]
+    header = ["Run", "Encoder", "Precision", "4 cores: s per study (range)", "6 cores: s per study (range)", "Peak memory MB", "Encoder file MB"]
+    return table(header, rows), four
 
 
 def main():
@@ -234,7 +245,7 @@ def main():
     summary = refresh_stage4()
     s4, sizes = stage4_section(summary) if summary else (NOT_YET, NOT_YET)
     seeds, seed_diffs = seed_section(score)
-    timing = timing_section()
+    timing, t4 = timing_section()
 
     best_cnn = max((v for v in s2_scores.values() if v[1] not in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
     best_other = max((v for v in s2_scores.values() if v[1] in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
@@ -258,6 +269,14 @@ def main():
                 f"and MinMax ranges, QAT helped Atto slightly but made both Tiny models worse ({qat_compare('int8_minmax')}). Calibration after the core conversion was similar. "
                 "This QAT is a simple version (3 epochs, learned ranges discarded), so a fuller version could still do better.\n"
                 if have_qat else "- **Quantization-aware training.** Running; not in this version.\n")
+    def sec(label):
+        return f"{t4[label]:.2f} s" if label in t4 else "not timed"
+
+    timing_line = (f"- **CPU cost.** On 4 cores, FP32, 72 windows: ConvNeXt-Atto {sec('atto')}, ConvNeXt-Tiny {sec('tiny')}, CoAtNet-0 {sec('coatnet0_256')}, "
+                   f"DINOv2-Small {sec('dinov2_tuned')}, R3D-18 {sec('r3d18_192')}. Every model is far inside the 80 s and 1.5 GB targets. "
+                   f"INT8 gained little speed on this CPU: Tiny took {sec('tiny_int8_core_pct')} with Conv and MatMul conversion, about a fifth faster, and Atto became slower ({sec('atto_int8_core_pct')}). "
+                   "The laptop's CPU lacks VNNI instructions, so 8-bit products are not much cheaper than 32-bit ones here. INT8 still cuts encoder file size by about 4x and peak memory by 20-40%.\n"
+                   if t4 else "")
     head_line = (f"- **Transformer head.** On ConvNeXt-Tiny it scored {signed(seed_diffs[0])} and {signed(seed_diffs[1])} against the attention head in two training seeds, on the edge of the 0.01 tie margin.\n"
                  if seed_diffs else "")
     text = f"""# CPU-deployable knee MRI classification: project report
@@ -270,18 +289,18 @@ This project asks which knee MRI classifiers can run on an ordinary CPU, and wha
 
 Where things stand:
 
-- **Encoder choice.** The best hybrid or vision-transformer encoder scored {best_other:.4f}, against {best_cnn:.4f} for the best convolutional encoder, so they did not beat the CNNs by more than the 0.01 tie margin (H1, fold 0; final latency comparison still needs the re-timing in section 8).
+- **Encoder choice.** The best hybrid or vision-transformer encoder scored {best_other:.4f}, against {best_cnn:.4f} for the best convolutional encoder, so they did not beat the CNNs by more than the 0.01 tie margin (H1, fold 0). CoAtNet-0 takes about as long as ConvNeXt-Tiny, while ConvNeXt-Atto is within 0.01 of both at about a tenth of the time.
 - **Fewer windows.** Going from 72 to 18 windows costs {abs(w18):.3f} on average for the two ConvNeXt models. The losses are largest for {worst_first[0]} and {worst_first[1]}.
 - **Precision.** FP16 changes nothing measurable. The cost of INT8 depends mostly on which layers are converted. ONNX Runtime's default also rounds around LayerNormalization, which costs ConvNeXt-Tiny 0.02-0.03; converting only Conv and MatMul layers removes nearly all of it. Change in concordance from FP32:
 {int8_line('ConvNeXt-Atto', atto)}
 {int8_line('ConvNeXt-Tiny', tiny)}
 {int8_line('ConvNeXt-Tiny, transformer head', tf)}
-{head_line}{qat_line}
+{timing_line}{head_line}{qat_line}
 ## 2. Questions
 
 | ID | Hypothesis | Status |
 |---|---|---|
-| H1 | At equal CPU latency, hybrid and ViT encoders do not beat modern CNNs by more than the noise margin | Supported on accuracy in fold 0; latency comparison pending |
+| H1 | At equal CPU latency, hybrid and ViT encoders do not beat modern CNNs by more than the noise margin | Supported in fold 0: at the same latency as ConvNeXt-Tiny, CoAtNet-0 ties it, and DINOv2-Small is slower and scores lower (sections 5 and 8) |
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | {'Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7)' if have_qat else 'In progress: post-training INT8 measured, QAT running'} |
 | H4 | Label quality moves AUC more than encoder choice | Stage 5, not started |
@@ -342,12 +361,19 @@ Recalibrated columns fit a slope and intercept per finding, cross-fitted in 5 pa
 
 ## 8. CPU cost of trained models
 
-{timing or 'Pending. A first attempt was discarded because other applications loaded the laptop: the same encoder varied by up to 2x. It will be repeated on an idle machine with 5 separate timing processes per encoder. That run also covers CoAtNet-0 at 256 px and R3D-18 at 192 px, and INT8 encoders.'}
+Encoder over all windows plus the study head, after the model is loaded. Each figure is the median of 5 separate timing processes, in Docker with the stated core limit and 3 GB of memory. Time grows in proportion to the number of windows, so 36 windows take half as long. Labels ending `_tf`, `_mean` and `_r192` are the Stage 3 variants; INT8 labels ending `_core_pct` convert only Conv and MatMul layers with percentile ranges.
+
+{timing}
+
+The 6-core limit was not faster than the 4-core one: ConvNeXt-Tiny took about the same time, and ConvNeXt-Atto was slower. A likely cause is that WSL's 6 virtual processors do not map to 6 separate physical cores, so the extra threads compete with each other. The two limits therefore do not separate as intended, and the 4-core figures are the ones to quote.
+
+{'' if timing else 'Pending. A first attempt was discarded because other applications loaded the laptop: the same encoder varied by up to 2x. It will be repeated on an idle machine with 5 separate timing processes per encoder. That run also covers CoAtNet-0 at 256 px and R3D-18 at 192 px, and INT8 encoders.'}
 
 ## 9. Limits
 
 - One fold and mostly one seed. Close models cannot be separated.
 - Timing describes this laptop under Docker limits, not a Raspberry Pi or Jetson, because Docker can limit cores and memory but not device speed.
+- INT8 speed depends on the CPU. This one has no VNNI instructions, so INT8 gives little or no speed-up; CPUs with VNNI or ARM dot-product instructions usually gain more.
 - Labels come from reports through an LLM, so concordance and calibration measure agreement with those labels. The 58 gold studies and external sets are for the final models.
 - The 2.5D and 3D comparison mixes in resolution and pretraining differences.
 - The QAT tested is simple: 3 epochs of fine-tuning, with the ranges it learns discarded before conversion. A fuller version that keeps them might close the small remaining gap.
@@ -355,9 +381,8 @@ Recalibrated columns fit a slope and intercept per finding, cross-fitted in 5 pa
 
 ## 10. Next steps
 
-1. Time the trained models on an idle laptop, FP32 and INT8 (Conv and MatMul only).
-2. Choose finalists on accuracy against measured CPU cost.
-3. Stage 5: all folds for 2-3 finalists, a second label set for H4, gold-study and external checks.
+1. Choose finalists on accuracy against measured CPU cost: ConvNeXt-Atto as the cheap option and ConvNeXt-Tiny with the transformer head as the most accurate are the likely pair.
+2. Stage 5: all folds for 2-3 finalists, a second label set for H4, gold-study and external checks.
 """
     os.makedirs(f"{ROOT}/docs", exist_ok=True)
     with open(f"{ROOT}/docs/project_report.md", "w", encoding="utf-8", newline="\n") as handle:

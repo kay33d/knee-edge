@@ -112,6 +112,10 @@ Batch 2 with 4 accumulation steps keeps 8 studies per update and the same update
 
 Current tables are in `docs/project_report.md`, rebuilt by `results/build_report.py`. So far (fold 0, one seed): FP16 changes nothing. Post-training INT8 with ONNX Runtime's default conversion costs ConvNeXt-Tiny 0.018-0.034 and worsens calibration; converting only Conv and MatMul layers cuts the loss to 0.001-0.004 for every model, because the default also rounds around LayerNormalization, which still computes in floating point. Quantization-aware training (finished 2026-11-13) did not reduce the loss: after the Conv and MatMul conversion, QAT weights lost 0.001-0.007 against 0.000-0.004 without it, and with the default conversion they lost more on both Tiny models. H3 is not supported in this setup; the conversion mattered more than the model family.
 
+## Stage 3 and 4 timing (2026-11-13)
+
+Clean run, 5 separate timing processes per model, laptop idle. On 4 cores, FP32, 72 windows: ConvNeXt-Atto 0.96 s, ConvNeXt-Tiny 9.88 s, CoAtNet-0 9.40 s, DINOv2-Small 11.56 s, R3D-18 25.2 s; peak memory under 600 MB. INT8 is about a fifth faster for Tiny and slower for Atto, because this CPU lacks VNNI. The 6-core limit was not faster than the 4-core one, so 4-core figures are quoted. Tables in `docs/project_report.md`.
+
 ## Known limits
 
 - One fold and one seed cannot separate close models, so Stage 2 only narrows the list.

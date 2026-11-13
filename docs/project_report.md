@@ -8,12 +8,13 @@ This project asks which knee MRI classifiers can run on an ordinary CPU, and wha
 
 Where things stand:
 
-- **Encoder choice.** The best hybrid or vision-transformer encoder scored 0.8382, against 0.8417 for the best convolutional encoder, so they did not beat the CNNs by more than the 0.01 tie margin (H1, fold 0; final latency comparison still needs the re-timing in section 8).
+- **Encoder choice.** The best hybrid or vision-transformer encoder scored 0.8382, against 0.8417 for the best convolutional encoder, so they did not beat the CNNs by more than the 0.01 tie margin (H1, fold 0). CoAtNet-0 takes about as long as ConvNeXt-Tiny, while ConvNeXt-Atto is within 0.01 of both at about a tenth of the time.
 - **Fewer windows.** Going from 72 to 18 windows costs 0.056 on average for the two ConvNeXt models. The losses are largest for Medial Meniscus and Lateral Meniscus.
 - **Precision.** FP16 changes nothing measurable. The cost of INT8 depends mostly on which layers are converted. ONNX Runtime's default also rounds around LayerNormalization, which costs ConvNeXt-Tiny 0.02-0.03; converting only Conv and MatMul layers removes nearly all of it. Change in concordance from FP32:
   - ConvNeXt-Atto: INT8, MinMax ranges -0.007; INT8, percentile ranges -0.001; INT8, MinMax, Conv and MatMul only -0.000; INT8, percentile, Conv and MatMul only -0.000.
   - ConvNeXt-Tiny: INT8, MinMax ranges -0.034; INT8, percentile ranges -0.021; INT8, MinMax, Conv and MatMul only -0.002; INT8, percentile, Conv and MatMul only -0.001.
   - ConvNeXt-Tiny, transformer head: INT8, MinMax ranges -0.033; INT8, percentile ranges -0.018; INT8, MinMax, Conv and MatMul only -0.004; INT8, percentile, Conv and MatMul only -0.004.
+- **CPU cost.** On 4 cores, FP32, 72 windows: ConvNeXt-Atto 0.96 s, ConvNeXt-Tiny 9.88 s, CoAtNet-0 9.40 s, DINOv2-Small 11.56 s, R3D-18 25.21 s. Every model is far inside the 80 s and 1.5 GB targets. INT8 gained little speed on this CPU: Tiny took 7.79 s with Conv and MatMul conversion, about a fifth faster, and Atto became slower (1.65 s). The laptop's CPU lacks VNNI instructions, so 8-bit products are not much cheaper than 32-bit ones here. INT8 still cuts encoder file size by about 4x and peak memory by 20-40%.
 - **Transformer head.** On ConvNeXt-Tiny it scored +0.009 and +0.010 against the attention head in two training seeds, on the edge of the 0.01 tie margin.
 - **Quantization-aware training.** It did not reduce the INT8 loss. With Conv and MatMul conversion and percentile ranges, QAT weights scored Atto -0.001 against -0.000, Tiny -0.005 against -0.001, Tiny with transformer head -0.007 against -0.004 without QAT, all against FP32. With ONNX Runtime's default conversion and MinMax ranges, QAT helped Atto slightly but made both Tiny models worse (Atto -0.003 against -0.007, Tiny -0.045 against -0.034, Tiny with transformer head -0.050 against -0.033). Calibration after the core conversion was similar. This QAT is a simple version (3 epochs, learned ranges discarded), so a fuller version could still do better.
 
@@ -21,7 +22,7 @@ Where things stand:
 
 | ID | Hypothesis | Status |
 |---|---|---|
-| H1 | At equal CPU latency, hybrid and ViT encoders do not beat modern CNNs by more than the noise margin | Supported on accuracy in fold 0; latency comparison pending |
+| H1 | At equal CPU latency, hybrid and ViT encoders do not beat modern CNNs by more than the noise margin | Supported in fold 0: at the same latency as ConvNeXt-Tiny, CoAtNet-0 ties it, and DINOv2-Small is slower and scores lower (sections 5 and 8) |
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7) |
 | H4 | Label quality moves AUC more than encoder choice | Stage 5, not started |
@@ -171,12 +172,42 @@ Recalibrated columns fit a slope and intercept per finding, cross-fitted in 5 pa
 
 ## 8. CPU cost of trained models
 
-Pending. A first attempt was discarded because other applications loaded the laptop: the same encoder varied by up to 2x. It will be repeated on an idle machine with 5 separate timing processes per encoder. That run also covers CoAtNet-0 at 256 px and R3D-18 at 192 px, and INT8 encoders.
+Encoder over all windows plus the study head, after the model is loaded. Each figure is the median of 5 separate timing processes, in Docker with the stated core limit and 3 GB of memory. Time grows in proportion to the number of windows, so 36 windows take half as long. Labels ending `_tf`, `_mean` and `_r192` are the Stage 3 variants; INT8 labels ending `_core_pct` convert only Conv and MatMul layers with percentile ranges.
+
+| Run | Encoder | Precision | 4 cores: s per study (range) | 6 cores: s per study (range) | Peak memory MB | Encoder file MB |
+|---|---|---|---|---|---|---|
+| atto | convnext_atto | FP32 | 0.96 (0.78-1.01) | 1.50 (1.44-1.57) | 141 | 12.9 |
+| atto_tf | convnext_atto@tf | FP32 | 0.97 (0.79-1.01) | 1.50 (1.45-1.57) | 141 | 12.9 |
+| atto_r192 | convnext_atto@r192 | FP32 | 0.96 (0.87-1.10) | 0.88 (0.85-0.90) | 133 | 12.9 |
+| atto_mean | convnext_atto@mean | FP32 | 0.96 (0.78-1.01) | 1.50 (1.44-1.57) | 141 | 12.9 |
+| tiny | convnext_tiny | FP32 | 9.88 (9.49-10.39) | 9.78 (9.67-10.10) | 291 | 106.2 |
+| tiny_tf | convnext_tiny@tf | FP32 | 9.88 (9.49-10.39) | 9.78 (9.67-10.10) | 291 | 106.2 |
+| tiny_r192 | convnext_tiny@r192 | FP32 | 5.41 (5.34-7.77) | 5.70 (5.55-5.73) | 272 | 106.2 |
+| tiny_mean | convnext_tiny@mean | FP32 | 9.88 (9.49-10.39) | 9.78 (9.67-10.10) | 291 | 106.2 |
+| mobilenetv4 | mobilenetv4_conv_small | FP32 | 0.38 (0.32-0.39) | 0.39 (0.38-0.46) | 113 | 9.5 |
+| efficientnetv2_b0 | tf_efficientnetv2_b0 | FP32 | 1.55 (1.32-1.66) | 1.66 (1.63-1.75) | 151 | 22.4 |
+| resnet50_tv2 | resnet50.tv2_in1k | FP32 | 6.23 (5.61-6.71) | 6.33 (6.20-6.47) | 328 | 89.6 |
+| coatnet0_256 | coatnet_0_rw_224 | FP32 | 9.40 (9.26-10.10) | 9.74 (9.61-9.94) | 402 | 121.7 |
+| dinov2_tuned | vit_small_patch14_dinov2@llrd | FP32 | 11.56 (11.30-11.64) | 11.73 (11.47-12.21) | 249 | 82.7 |
+| r3d18_192 | r3d_18 | FP32 | 25.21 (24.51-26.58) | 25.70 (23.29-26.59) | 599 | 126.5 |
+| atto_int8_core_pct | convnext_atto | INT8 | 1.65 (1.59-1.73) | 1.78 (1.66-2.53) | 114 | 3.6 |
+| tiny_int8_core_pct | convnext_tiny | INT8 | 7.79 (7.29-8.21) | 7.84 (7.72-8.12) | 180 | 27.2 |
+| tiny_tf_int8_core_pct | convnext_tiny@tf | INT8 | 7.99 (7.77-8.22) | 7.85 (7.72-8.08) | 180 | 27.2 |
+| atto_int8_minmax | convnext_atto | INT8 | 1.35 (1.31-1.44) | 1.43 (1.38-1.46) | 112 | 3.6 |
+| atto_int8_pct | convnext_atto | INT8 | 1.39 (1.37-1.42) | 1.43 (1.42-1.48) | 114 | 3.6 |
+| tiny_int8_minmax | convnext_tiny | INT8 | 8.64 (8.26-8.86) | 8.40 (8.22-8.49) | 186 | 27.2 |
+| tiny_int8_pct | convnext_tiny | INT8 | 9.26 (8.84-9.88) | 8.31 (8.23-8.52) | 186 | 27.2 |
+| tiny_tf_int8_pct | convnext_tiny@tf | INT8 | 8.28 (8.16-8.51) | 8.26 (8.21-8.42) | 186 | 27.2 |
+
+The 6-core limit was not faster than the 4-core one: ConvNeXt-Tiny took about the same time, and ConvNeXt-Atto was slower. A likely cause is that WSL's 6 virtual processors do not map to 6 separate physical cores, so the extra threads compete with each other. The two limits therefore do not separate as intended, and the 4-core figures are the ones to quote.
+
+
 
 ## 9. Limits
 
 - One fold and mostly one seed. Close models cannot be separated.
 - Timing describes this laptop under Docker limits, not a Raspberry Pi or Jetson, because Docker can limit cores and memory but not device speed.
+- INT8 speed depends on the CPU. This one has no VNNI instructions, so INT8 gives little or no speed-up; CPUs with VNNI or ARM dot-product instructions usually gain more.
 - Labels come from reports through an LLM, so concordance and calibration measure agreement with those labels. The 58 gold studies and external sets are for the final models.
 - The 2.5D and 3D comparison mixes in resolution and pretraining differences.
 - The QAT tested is simple: 3 epochs of fine-tuning, with the ranges it learns discarded before conversion. A fuller version that keeps them might close the small remaining gap.
@@ -184,6 +215,5 @@ Pending. A first attempt was discarded because other applications loaded the lap
 
 ## 10. Next steps
 
-1. Time the trained models on an idle laptop, FP32 and INT8 (Conv and MatMul only).
-2. Choose finalists on accuracy against measured CPU cost.
-3. Stage 5: all folds for 2-3 finalists, a second label set for H4, gold-study and external checks.
+1. Choose finalists on accuracy against measured CPU cost: ConvNeXt-Atto as the cheap option and ConvNeXt-Tiny with the transformer head as the most accurate are the likely pair.
+2. Stage 5: all folds for 2-3 finalists, a second label set for H4, gold-study and external checks.
