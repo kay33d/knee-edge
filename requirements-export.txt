@@ -1,0 +1,7 @@
+-r requirements.txt
+--extra-index-url https://download.pytorch.org/whl/cpu
+fvcore==0.1.5.post20221221
+onnxscript==0.7.2
+timm==1.0.30
+torch==2.15.0+cpu
+torchvision==0.29.2+cpu

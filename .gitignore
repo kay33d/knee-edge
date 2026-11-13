@@ -1,0 +1,37 @@
+# Competition data, labels and anything study-level must never enter this repo (MIRA agreement).
+data_meta/
+labels_meta/
+models/
+
+# Everything under results/ is ignored except code and aggregate summaries.
+results/*
+!results/*.py
+!results/stage4_summary.json
+!results/stage1_summary.json
+!results/stage1_pi5-class.json
+!results/stage1_orin-class-cpu.json
+!results/stage3_timing_pi5-class.json
+!results/stage3_timing_orin-class-cpu.json
+
+# Trained weights and generated Kaggle kernels.
+training/kernels/
+training/disk_probe/
+training/side_probe/
+training/kernel-metadata.json
+*.pt
+*.pth
+*.onnx
+*.npy
+
+# Credentials
+kaggle*.json
+*_kaggle.json
+
+# Local
+.venv-native/
+.tmp/
+__pycache__/
+*.log
+
+# Internal page: names teammates' accounts per run. The public report is docs/project_report.md.
+docs/study_overview.html

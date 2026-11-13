@@ -1,0 +1,7 @@
+# Copy to %USERPROFILE%/.wslconfig before starting WSL.
+# Keep these values fixed across every benchmark run and report them in the paper.
+[wsl2]
+memory=4GB
+processors=6
+swap=2GB
+swapfile=D:\\wsl\\swap.vhdx

@@ -1,0 +1,1625 @@
+{
+  "convnext_atto@eval": {
+    "fp32": {
+      "c": 0.8373,
+      "c_diff": 0.0,
+      "c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0,
+        "MCL": 0.0,
+        "Medial Meniscus": 0.0,
+        "Lateral Meniscus": 0.0,
+        "Medial OA": 0.0,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0,
+        "Effusion": 0.0,
+        "Synovitis": 0.0,
+        "Baker's": 0.0,
+        "Contusion": 0.0,
+        "Fracture": 0.0
+      },
+      "ece": 0.0431,
+      "ece_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "ece_equal_count": 0.0408,
+      "ece_equal_count_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "brier": 0.05674,
+      "brier_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "ece_after_recal": 0.0236,
+      "ece_after_recal_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "brier_after_recal": 0.05482,
+      "brier_after_recal_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "mean_abs_prob_change": 0.0,
+      "mean_prob_shift": 0.0
+    },
+    "fp16": {
+      "c": 0.8373,
+      "c_diff": 0.0,
+      "c_diff_ci": [
+        -0.0001,
+        0.0002
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0001,
+        "MCL": -0.0005,
+        "Medial Meniscus": 0.0002,
+        "Lateral Meniscus": 0.0,
+        "Medial OA": 0.0,
+        "Lateral OA": 0.0,
+        "PF OA": -0.0001,
+        "Effusion": 0.0002,
+        "Synovitis": 0.0,
+        "Baker's": 0.0003,
+        "Contusion": 0.0001,
+        "Fracture": 0.0
+      },
+      "ece": 0.0431,
+      "ece_diff_ci": [
+        -0.0003,
+        0.0003
+      ],
+      "ece_equal_count": 0.041,
+      "ece_equal_count_diff_ci": [
+        -0.0004,
+        0.0005
+      ],
+      "brier": 0.05674,
+      "brier_diff_ci": [
+        -0.0,
+        0.0
+      ],
+      "ece_after_recal": 0.0241,
+      "ece_after_recal_diff_ci": [
+        -0.0001,
+        0.0009
+      ],
+      "brier_after_recal": 0.05482,
+      "brier_after_recal_diff_ci": [
+        -0.0,
+        0.0
+      ],
+      "mean_abs_prob_change": 0.0002,
+      "mean_prob_shift": -0.0
+    },
+    "int8_minmax": {
+      "c": 0.8304,
+      "c_diff": -0.0069,
+      "c_diff_ci": [
+        -0.0134,
+        -0.0
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0296,
+        "MCL": -0.0072,
+        "Medial Meniscus": -0.0028,
+        "Lateral Meniscus": -0.0046,
+        "Medial OA": -0.0051,
+        "Lateral OA": -0.0117,
+        "PF OA": -0.0092,
+        "Effusion": -0.0059,
+        "Synovitis": 0.0073,
+        "Baker's": 0.0052,
+        "Contusion": -0.0008,
+        "Fracture": -0.0182
+      },
+      "ece": 0.05,
+      "ece_diff_ci": [
+        0.0013,
+        0.0102
+      ],
+      "ece_equal_count": 0.0497,
+      "ece_equal_count_diff_ci": [
+        0.0036,
+        0.0123
+      ],
+      "brier": 0.0609,
+      "brier_diff_ci": [
+        0.00324,
+        0.00505
+      ],
+      "ece_after_recal": 0.0214,
+      "ece_after_recal_diff_ci": [
+        -0.0057,
+        0.0034
+      ],
+      "brier_after_recal": 0.05694,
+      "brier_after_recal_diff_ci": [
+        0.0014,
+        0.00279
+      ],
+      "mean_abs_prob_change": 0.0423,
+      "mean_prob_shift": -0.0107
+    },
+    "int8_minmax_core": {
+      "c": 0.8372,
+      "c_diff": -0.0001,
+      "c_diff_ci": [
+        -0.005,
+        0.0054
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.014,
+        "MCL": 0.0064,
+        "Medial Meniscus": -0.0011,
+        "Lateral Meniscus": -0.0043,
+        "Medial OA": -0.0013,
+        "Lateral OA": -0.0087,
+        "PF OA": -0.0017,
+        "Effusion": -0.0004,
+        "Synovitis": 0.0146,
+        "Baker's": 0.003,
+        "Contusion": 0.0023,
+        "Fracture": 0.0043
+      },
+      "ece": 0.0432,
+      "ece_diff_ci": [
+        -0.0039,
+        0.0039
+      ],
+      "ece_equal_count": 0.0442,
+      "ece_equal_count_diff_ci": [
+        -0.002,
+        0.0066
+      ],
+      "brier": 0.05844,
+      "brier_diff_ci": [
+        0.00111,
+        0.00222
+      ],
+      "ece_after_recal": 0.0223,
+      "ece_after_recal_diff_ci": [
+        -0.0044,
+        0.0038
+      ],
+      "brier_after_recal": 0.05582,
+      "brier_after_recal_diff_ci": [
+        0.00052,
+        0.00144
+      ],
+      "mean_abs_prob_change": 0.0277,
+      "mean_prob_shift": -0.0045
+    },
+    "int8_percentile": {
+      "c": 0.8359,
+      "c_diff": -0.0014,
+      "c_diff_ci": [
+        -0.0064,
+        0.0046
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0133,
+        "MCL": -0.0058,
+        "Medial Meniscus": 0.0027,
+        "Lateral Meniscus": -0.0012,
+        "Medial OA": -0.0027,
+        "Lateral OA": -0.01,
+        "PF OA": -0.0037,
+        "Effusion": -0.0003,
+        "Synovitis": 0.0219,
+        "Baker's": 0.0012,
+        "Contusion": 0.0055,
+        "Fracture": -0.0118
+      },
+      "ece": 0.0575,
+      "ece_diff_ci": [
+        0.0074,
+        0.0164
+      ],
+      "ece_equal_count": 0.0562,
+      "ece_equal_count_diff_ci": [
+        0.0082,
+        0.0177
+      ],
+      "brier": 0.05995,
+      "brier_diff_ci": [
+        0.00239,
+        0.00398
+      ],
+      "ece_after_recal": 0.0238,
+      "ece_after_recal_diff_ci": [
+        -0.0039,
+        0.0043
+      ],
+      "brier_after_recal": 0.0561,
+      "brier_after_recal_diff_ci": [
+        0.00074,
+        0.0018
+      ],
+      "mean_abs_prob_change": 0.0386,
+      "mean_prob_shift": -0.0295
+    },
+    "int8_percentile_core": {
+      "c": 0.8372,
+      "c_diff": -0.0001,
+      "c_diff_ci": [
+        -0.005,
+        0.0053
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0112,
+        "MCL": 0.0019,
+        "Medial Meniscus": -0.0012,
+        "Lateral Meniscus": 0.0071,
+        "Medial OA": -0.0037,
+        "Lateral OA": -0.0074,
+        "PF OA": 0.0004,
+        "Effusion": -0.0017,
+        "Synovitis": 0.0073,
+        "Baker's": 0.0018,
+        "Contusion": 0.0069,
+        "Fracture": -0.0011
+      },
+      "ece": 0.0449,
+      "ece_diff_ci": [
+        -0.0025,
+        0.0049
+      ],
+      "ece_equal_count": 0.0427,
+      "ece_equal_count_diff_ci": [
+        -0.0025,
+        0.0046
+      ],
+      "brier": 0.05768,
+      "brier_diff_ci": [
+        0.00042,
+        0.0014
+      ],
+      "ece_after_recal": 0.0226,
+      "ece_after_recal_diff_ci": [
+        -0.0044,
+        0.0036
+      ],
+      "brier_after_recal": 0.05533,
+      "brier_after_recal_diff_ci": [
+        9e-05,
+        0.00093
+      ],
+      "mean_abs_prob_change": 0.024,
+      "mean_prob_shift": -0.004
+    },
+    "qat_int8_minmax": {
+      "c": 0.834,
+      "c_diff": -0.0033,
+      "c_diff_ci": [
+        -0.0097,
+        0.0027
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0216,
+        "MCL": -0.0055,
+        "Medial Meniscus": -0.0084,
+        "Lateral Meniscus": 0.004,
+        "Medial OA": -0.0069,
+        "Lateral OA": -0.0108,
+        "PF OA": -0.007,
+        "Effusion": -0.0034,
+        "Synovitis": 0.0036,
+        "Baker's": 0.0134,
+        "Contusion": 0.003,
+        "Fracture": 0.0
+      },
+      "ece": 0.0454,
+      "ece_diff_ci": [
+        -0.0014,
+        0.0065
+      ],
+      "ece_equal_count": 0.0473,
+      "ece_equal_count_diff_ci": [
+        0.0004,
+        0.0091
+      ],
+      "brier": 0.05971,
+      "brier_diff_ci": [
+        0.00211,
+        0.00383
+      ],
+      "ece_after_recal": 0.0206,
+      "ece_after_recal_diff_ci": [
+        -0.0061,
+        0.002
+      ],
+      "brier_after_recal": 0.05646,
+      "brier_after_recal_diff_ci": [
+        0.00091,
+        0.00231
+      ],
+      "mean_abs_prob_change": 0.0408,
+      "mean_prob_shift": 0.0014
+    },
+    "qat_int8_minmax_core": {
+      "c": 0.8359,
+      "c_diff": -0.0014,
+      "c_diff_ci": [
+        -0.0064,
+        0.003
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.006,
+        "MCL": -0.004,
+        "Medial Meniscus": -0.0028,
+        "Lateral Meniscus": 0.0044,
+        "Medial OA": -0.0038,
+        "Lateral OA": -0.0059,
+        "PF OA": 0.0016,
+        "Effusion": -0.0004,
+        "Synovitis": -0.0109,
+        "Baker's": 0.0,
+        "Contusion": 0.0047,
+        "Fracture": 0.0064
+      },
+      "ece": 0.0444,
+      "ece_diff_ci": [
+        -0.0021,
+        0.0053
+      ],
+      "ece_equal_count": 0.0423,
+      "ece_equal_count_diff_ci": [
+        -0.0026,
+        0.0062
+      ],
+      "brier": 0.05803,
+      "brier_diff_ci": [
+        0.00078,
+        0.00181
+      ],
+      "ece_after_recal": 0.0239,
+      "ece_after_recal_diff_ci": [
+        -0.0033,
+        0.0045
+      ],
+      "brier_after_recal": 0.05568,
+      "brier_after_recal_diff_ci": [
+        0.00043,
+        0.00129
+      ],
+      "mean_abs_prob_change": 0.0274,
+      "mean_prob_shift": 0.0055
+    },
+    "qat_int8_percentile": {
+      "c": 0.8352,
+      "c_diff": -0.0021,
+      "c_diff_ci": [
+        -0.0069,
+        0.0037
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0145,
+        "MCL": -0.0053,
+        "Medial Meniscus": 0.0014,
+        "Lateral Meniscus": 0.0085,
+        "Medial OA": -0.0044,
+        "Lateral OA": -0.0047,
+        "PF OA": -0.0058,
+        "Effusion": 0.0026,
+        "Synovitis": 0.0073,
+        "Baker's": 0.004,
+        "Contusion": 0.0,
+        "Fracture": -0.0139
+      },
+      "ece": 0.058,
+      "ece_diff_ci": [
+        0.0081,
+        0.0173
+      ],
+      "ece_equal_count": 0.0576,
+      "ece_equal_count_diff_ci": [
+        0.0086,
+        0.0184
+      ],
+      "brier": 0.06036,
+      "brier_diff_ci": [
+        0.00277,
+        0.00448
+      ],
+      "ece_after_recal": 0.0233,
+      "ece_after_recal_diff_ci": [
+        -0.0045,
+        0.0042
+      ],
+      "brier_after_recal": 0.05619,
+      "brier_after_recal_diff_ci": [
+        0.00076,
+        0.00195
+      ],
+      "mean_abs_prob_change": 0.0449,
+      "mean_prob_shift": -0.0289
+    },
+    "qat_int8_percentile_core": {
+      "c": 0.8365,
+      "c_diff": -0.0008,
+      "c_diff_ci": [
+        -0.0049,
+        0.0036
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0102,
+        "MCL": 0.0009,
+        "Medial Meniscus": -0.0013,
+        "Lateral Meniscus": 0.0055,
+        "Medial OA": -0.0046,
+        "Lateral OA": -0.0023,
+        "PF OA": -0.0012,
+        "Effusion": 0.0014,
+        "Synovitis": -0.0036,
+        "Baker's": 0.0043,
+        "Contusion": 0.0043,
+        "Fracture": -0.0021
+      },
+      "ece": 0.0447,
+      "ece_diff_ci": [
+        -0.0023,
+        0.0046
+      ],
+      "ece_equal_count": 0.0424,
+      "ece_equal_count_diff_ci": [
+        -0.0026,
+        0.005
+      ],
+      "brier": 0.05736,
+      "brier_diff_ci": [
+        0.0002,
+        0.00109
+      ],
+      "ece_after_recal": 0.0216,
+      "ece_after_recal_diff_ci": [
+        -0.0049,
+        0.0026
+      ],
+      "brier_after_recal": 0.05513,
+      "brier_after_recal_diff_ci": [
+        -9e-05,
+        0.00076
+      ],
+      "mean_abs_prob_change": 0.0249,
+      "mean_prob_shift": 0.0039
+    },
+    "qat_plain": {
+      "c": 0.8366,
+      "c_diff": -0.0007,
+      "c_diff_ci": [
+        -0.0036,
+        0.0019
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0013,
+        "MCL": -0.0045,
+        "Medial Meniscus": -0.0009,
+        "Lateral Meniscus": 0.0024,
+        "Medial OA": 0.0028,
+        "Lateral OA": 0.0017,
+        "PF OA": 0.0,
+        "Effusion": -0.0004,
+        "Synovitis": -0.0182,
+        "Baker's": 0.0015,
+        "Contusion": 0.0012,
+        "Fracture": 0.0043
+      },
+      "ece": 0.0449,
+      "ece_diff_ci": [
+        -0.0019,
+        0.0043
+      ],
+      "ece_equal_count": 0.0426,
+      "ece_equal_count_diff_ci": [
+        -0.0016,
+        0.0046
+      ],
+      "brier": 0.05705,
+      "brier_diff_ci": [
+        -6e-05,
+        0.00068
+      ],
+      "ece_after_recal": 0.0238,
+      "ece_after_recal_diff_ci": [
+        -0.0031,
+        0.0034
+      ],
+      "brier_after_recal": 0.05491,
+      "brier_after_recal_diff_ci": [
+        -0.00017,
+        0.00037
+      ],
+      "mean_abs_prob_change": 0.0181,
+      "mean_prob_shift": 0.0046
+    }
+  },
+  "convnext_tiny@eval": {
+    "fp32": {
+      "c": 0.8417,
+      "c_diff": 0.0,
+      "c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0,
+        "MCL": 0.0,
+        "Medial Meniscus": 0.0,
+        "Lateral Meniscus": 0.0,
+        "Medial OA": 0.0,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0,
+        "Effusion": 0.0,
+        "Synovitis": 0.0,
+        "Baker's": 0.0,
+        "Contusion": 0.0,
+        "Fracture": 0.0
+      },
+      "ece": 0.0423,
+      "ece_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "ece_equal_count": 0.0429,
+      "ece_equal_count_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "brier": 0.05615,
+      "brier_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "ece_after_recal": 0.0227,
+      "ece_after_recal_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "brier_after_recal": 0.05357,
+      "brier_after_recal_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "mean_abs_prob_change": 0.0,
+      "mean_prob_shift": 0.0
+    },
+    "fp16": {
+      "c": 0.8418,
+      "c_diff": 0.0001,
+      "c_diff_ci": [
+        -0.0,
+        0.0002
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0001,
+        "MCL": 0.0,
+        "Medial Meniscus": 0.0001,
+        "Lateral Meniscus": 0.0001,
+        "Medial OA": 0.0003,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0,
+        "Effusion": 0.0001,
+        "Synovitis": 0.0,
+        "Baker's": 0.0,
+        "Contusion": 0.0001,
+        "Fracture": 0.0
+      },
+      "ece": 0.0423,
+      "ece_diff_ci": [
+        -0.0003,
+        0.0004
+      ],
+      "ece_equal_count": 0.0429,
+      "ece_equal_count_diff_ci": [
+        -0.0004,
+        0.0004
+      ],
+      "brier": 0.05616,
+      "brier_diff_ci": [
+        -0.0,
+        0.0
+      ],
+      "ece_after_recal": 0.0225,
+      "ece_after_recal_diff_ci": [
+        -0.0004,
+        0.0002
+      ],
+      "brier_after_recal": 0.05357,
+      "brier_after_recal_diff_ci": [
+        -0.0,
+        0.0
+      ],
+      "mean_abs_prob_change": 0.0001,
+      "mean_prob_shift": 0.0
+    },
+    "int8_minmax": {
+      "c": 0.808,
+      "c_diff": -0.0338,
+      "c_diff_ci": [
+        -0.044,
+        -0.0212
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0331,
+        "MCL": -0.0791,
+        "Medial Meniscus": -0.0334,
+        "Lateral Meniscus": -0.058,
+        "Medial OA": -0.0067,
+        "Lateral OA": -0.0142,
+        "PF OA": -0.0094,
+        "Effusion": -0.065,
+        "Synovitis": -0.0182,
+        "Baker's": -0.0451,
+        "Contusion": -0.0202,
+        "Fracture": -0.0225
+      },
+      "ece": 0.1774,
+      "ece_diff_ci": [
+        0.1239,
+        0.1387
+      ],
+      "ece_equal_count": 0.1916,
+      "ece_equal_count_diff_ci": [
+        0.1381,
+        0.1532
+      ],
+      "brier": 0.12307,
+      "brier_diff_ci": [
+        0.06333,
+        0.07016
+      ],
+      "ece_after_recal": 0.0389,
+      "ece_after_recal_diff_ci": [
+        0.007,
+        0.0197
+      ],
+      "brier_after_recal": 0.06597,
+      "brier_after_recal_diff_ci": [
+        0.01084,
+        0.01384
+      ],
+      "mean_abs_prob_change": 0.1993,
+      "mean_prob_shift": -0.0626
+    },
+    "int8_minmax_core": {
+      "c": 0.8398,
+      "c_diff": -0.0019,
+      "c_diff_ci": [
+        -0.0069,
+        0.0035
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0046,
+        "MCL": 0.0127,
+        "Medial Meniscus": -0.0045,
+        "Lateral Meniscus": -0.0001,
+        "Medial OA": -0.0006,
+        "Lateral OA": -0.0098,
+        "PF OA": 0.001,
+        "Effusion": -0.0081,
+        "Synovitis": 0.0182,
+        "Baker's": -0.004,
+        "Contusion": -0.0112,
+        "Fracture": -0.0118
+      },
+      "ece": 0.0511,
+      "ece_diff_ci": [
+        0.0038,
+        0.0112
+      ],
+      "ece_equal_count": 0.0505,
+      "ece_equal_count_diff_ci": [
+        0.0021,
+        0.0105
+      ],
+      "brier": 0.05812,
+      "brier_diff_ci": [
+        0.00127,
+        0.00265
+      ],
+      "ece_after_recal": 0.0232,
+      "ece_after_recal_diff_ci": [
+        -0.0038,
+        0.0041
+      ],
+      "brier_after_recal": 0.05467,
+      "brier_after_recal_diff_ci": [
+        0.00059,
+        0.00162
+      ],
+      "mean_abs_prob_change": 0.0306,
+      "mean_prob_shift": -0.0141
+    },
+    "int8_percentile": {
+      "c": 0.8206,
+      "c_diff": -0.0212,
+      "c_diff_ci": [
+        -0.0298,
+        -0.0131
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0192,
+        "MCL": -0.0285,
+        "Medial Meniscus": -0.019,
+        "Lateral Meniscus": -0.0536,
+        "Medial OA": 0.0007,
+        "Lateral OA": -0.004,
+        "PF OA": -0.0071,
+        "Effusion": -0.0369,
+        "Synovitis": -0.0146,
+        "Baker's": -0.0128,
+        "Contusion": -0.0387,
+        "Fracture": -0.0203
+      },
+      "ece": 0.159,
+      "ece_diff_ci": [
+        0.1045,
+        0.1193
+      ],
+      "ece_equal_count": 0.1615,
+      "ece_equal_count_diff_ci": [
+        0.1077,
+        0.1226
+      ],
+      "brier": 0.09579,
+      "brier_diff_ci": [
+        0.0371,
+        0.04206
+      ],
+      "ece_after_recal": 0.0254,
+      "ece_after_recal_diff_ci": [
+        -0.0034,
+        0.0071
+      ],
+      "brier_after_recal": 0.06008,
+      "brier_after_recal_diff_ci": [
+        0.00524,
+        0.0078
+      ],
+      "mean_abs_prob_change": 0.1742,
+      "mean_prob_shift": 0.051
+    },
+    "int8_percentile_core": {
+      "c": 0.8408,
+      "c_diff": -0.0009,
+      "c_diff_ci": [
+        -0.0054,
+        0.0037
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0034,
+        "MCL": 0.0086,
+        "Medial Meniscus": -0.002,
+        "Lateral Meniscus": -0.0005,
+        "Medial OA": 0.0015,
+        "Lateral OA": -0.0034,
+        "PF OA": -0.0037,
+        "Effusion": -0.0051,
+        "Synovitis": 0.0036,
+        "Baker's": -0.0061,
+        "Contusion": -0.0052,
+        "Fracture": -0.0021
+      },
+      "ece": 0.0493,
+      "ece_diff_ci": [
+        0.0025,
+        0.009
+      ],
+      "ece_equal_count": 0.0489,
+      "ece_equal_count_diff_ci": [
+        0.0013,
+        0.0088
+      ],
+      "brier": 0.05761,
+      "brier_diff_ci": [
+        0.00085,
+        0.00202
+      ],
+      "ece_after_recal": 0.0244,
+      "ece_after_recal_diff_ci": [
+        -0.0032,
+        0.0042
+      ],
+      "brier_after_recal": 0.05427,
+      "brier_after_recal_diff_ci": [
+        0.00027,
+        0.00115
+      ],
+      "mean_abs_prob_change": 0.0254,
+      "mean_prob_shift": -0.0104
+    },
+    "qat_int8_minmax": {
+      "c": 0.7964,
+      "c_diff": -0.0453,
+      "c_diff_ci": [
+        -0.0577,
+        -0.0327
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0453,
+        "MCL": -0.1043,
+        "Medial Meniscus": -0.0467,
+        "Lateral Meniscus": -0.0976,
+        "Medial OA": -0.0097,
+        "Lateral OA": -0.0443,
+        "PF OA": -0.0183,
+        "Effusion": -0.0623,
+        "Synovitis": -0.0292,
+        "Baker's": -0.0476,
+        "Contusion": -0.0229,
+        "Fracture": -0.015
+      },
+      "ece": 0.1921,
+      "ece_diff_ci": [
+        0.1374,
+        0.1515
+      ],
+      "ece_equal_count": 0.1954,
+      "ece_equal_count_diff_ci": [
+        0.1427,
+        0.1574
+      ],
+      "brier": 0.12911,
+      "brier_diff_ci": [
+        0.06921,
+        0.07645
+      ],
+      "ece_after_recal": 0.0386,
+      "ece_after_recal_diff_ci": [
+        0.0065,
+        0.0183
+      ],
+      "brier_after_recal": 0.06811,
+      "brier_after_recal_diff_ci": [
+        0.01292,
+        0.01612
+      ],
+      "mean_abs_prob_change": 0.205,
+      "mean_prob_shift": -0.0639
+    },
+    "qat_int8_minmax_core": {
+      "c": 0.8392,
+      "c_diff": -0.0025,
+      "c_diff_ci": [
+        -0.0077,
+        0.0027
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0024,
+        "MCL": -0.0031,
+        "Medial Meniscus": -0.0054,
+        "Lateral Meniscus": 0.0022,
+        "Medial OA": -0.0022,
+        "Lateral OA": -0.0087,
+        "PF OA": -0.0013,
+        "Effusion": -0.0065,
+        "Synovitis": 0.0036,
+        "Baker's": 0.0073,
+        "Contusion": -0.0032,
+        "Fracture": -0.0107
+      },
+      "ece": 0.0452,
+      "ece_diff_ci": [
+        -0.0009,
+        0.0061
+      ],
+      "ece_equal_count": 0.0445,
+      "ece_equal_count_diff_ci": [
+        -0.0014,
+        0.0055
+      ],
+      "brier": 0.05704,
+      "brier_diff_ci": [
+        0.00037,
+        0.00148
+      ],
+      "ece_after_recal": 0.0223,
+      "ece_after_recal_diff_ci": [
+        -0.0045,
+        0.0035
+      ],
+      "brier_after_recal": 0.0543,
+      "brier_after_recal_diff_ci": [
+        0.00026,
+        0.00123
+      ],
+      "mean_abs_prob_change": 0.0258,
+      "mean_prob_shift": -0.003
+    },
+    "qat_int8_percentile": {
+      "c": 0.8177,
+      "c_diff": -0.024,
+      "c_diff_ci": [
+        -0.0322,
+        -0.0139
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0043,
+        "MCL": -0.0605,
+        "Medial Meniscus": -0.0243,
+        "Lateral Meniscus": -0.0575,
+        "Medial OA": -0.0031,
+        "Lateral OA": -0.0151,
+        "PF OA": -0.0144,
+        "Effusion": -0.0414,
+        "Synovitis": 0.0073,
+        "Baker's": -0.0271,
+        "Contusion": -0.0239,
+        "Fracture": -0.0235
+      },
+      "ece": 0.1825,
+      "ece_diff_ci": [
+        0.1279,
+        0.1451
+      ],
+      "ece_equal_count": 0.1839,
+      "ece_equal_count_diff_ci": [
+        0.1299,
+        0.1451
+      ],
+      "brier": 0.10909,
+      "brier_diff_ci": [
+        0.05019,
+        0.05594
+      ],
+      "ece_after_recal": 0.0315,
+      "ece_after_recal_diff_ci": [
+        0.0014,
+        0.0122
+      ],
+      "brier_after_recal": 0.06102,
+      "brier_after_recal_diff_ci": [
+        0.00623,
+        0.00886
+      ],
+      "mean_abs_prob_change": 0.1999,
+      "mean_prob_shift": 0.0941
+    },
+    "qat_int8_percentile_core": {
+      "c": 0.8363,
+      "c_diff": -0.0054,
+      "c_diff_ci": [
+        -0.0095,
+        -0.0014
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0057,
+        "MCL": -0.0144,
+        "Medial Meniscus": -0.0032,
+        "Lateral Meniscus": -0.006,
+        "Medial OA": -0.0008,
+        "Lateral OA": -0.0108,
+        "PF OA": -0.0009,
+        "Effusion": -0.0083,
+        "Synovitis": 0.0,
+        "Baker's": -0.003,
+        "Contusion": 0.0004,
+        "Fracture": -0.0118
+      },
+      "ece": 0.0455,
+      "ece_diff_ci": [
+        -0.0006,
+        0.0055
+      ],
+      "ece_equal_count": 0.0464,
+      "ece_equal_count_diff_ci": [
+        -0.0011,
+        0.0055
+      ],
+      "brier": 0.05722,
+      "brier_diff_ci": [
+        0.00062,
+        0.00151
+      ],
+      "ece_after_recal": 0.0224,
+      "ece_after_recal_diff_ci": [
+        -0.004,
+        0.0039
+      ],
+      "brier_after_recal": 0.05449,
+      "brier_after_recal_diff_ci": [
+        0.00052,
+        0.00133
+      ],
+      "mean_abs_prob_change": 0.0218,
+      "mean_prob_shift": -0.0003
+    },
+    "qat_plain": {
+      "c": 0.8396,
+      "c_diff": -0.0021,
+      "c_diff_ci": [
+        -0.0064,
+        0.0028
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0045,
+        "MCL": -0.0227,
+        "Medial Meniscus": -0.0014,
+        "Lateral Meniscus": -0.0038,
+        "Medial OA": 0.001,
+        "Lateral OA": -0.0045,
+        "PF OA": -0.0005,
+        "Effusion": -0.0045,
+        "Synovitis": 0.0146,
+        "Baker's": 0.0055,
+        "Contusion": -0.0009,
+        "Fracture": -0.0032
+      },
+      "ece": 0.0449,
+      "ece_diff_ci": [
+        0.0006,
+        0.0064
+      ],
+      "ece_equal_count": 0.0443,
+      "ece_equal_count_diff_ci": [
+        -0.0008,
+        0.0063
+      ],
+      "brier": 0.05739,
+      "brier_diff_ci": [
+        0.00079,
+        0.00177
+      ],
+      "ece_after_recal": 0.0207,
+      "ece_after_recal_diff_ci": [
+        -0.0057,
+        0.0019
+      ],
+      "brier_after_recal": 0.0542,
+      "brier_after_recal_diff_ci": [
+        0.00027,
+        0.00105
+      ],
+      "mean_abs_prob_change": 0.0242,
+      "mean_prob_shift": 0.0034
+    }
+  },
+  "convnext_tiny@tf_eval": {
+    "fp32": {
+      "c": 0.8505,
+      "c_diff": 0.0,
+      "c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0,
+        "MCL": 0.0,
+        "Medial Meniscus": 0.0,
+        "Lateral Meniscus": 0.0,
+        "Medial OA": 0.0,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0,
+        "Effusion": 0.0,
+        "Synovitis": 0.0,
+        "Baker's": 0.0,
+        "Contusion": 0.0,
+        "Fracture": 0.0
+      },
+      "ece": 0.0407,
+      "ece_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "ece_equal_count": 0.0411,
+      "ece_equal_count_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "brier": 0.05431,
+      "brier_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "ece_after_recal": 0.0254,
+      "ece_after_recal_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "brier_after_recal": 0.05231,
+      "brier_after_recal_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "mean_abs_prob_change": 0.0,
+      "mean_prob_shift": 0.0
+    },
+    "fp16": {
+      "c": 0.8505,
+      "c_diff": 0.0001,
+      "c_diff_ci": [
+        -0.0001,
+        0.0002
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0001,
+        "MCL": 0.0002,
+        "Medial Meniscus": 0.0002,
+        "Lateral Meniscus": 0.0001,
+        "Medial OA": 0.0001,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0002,
+        "Effusion": 0.0,
+        "Synovitis": 0.0,
+        "Baker's": -0.0003,
+        "Contusion": 0.0,
+        "Fracture": 0.0
+      },
+      "ece": 0.0405,
+      "ece_diff_ci": [
+        -0.0006,
+        0.0003
+      ],
+      "ece_equal_count": 0.0408,
+      "ece_equal_count_diff_ci": [
+        -0.0004,
+        0.0003
+      ],
+      "brier": 0.05431,
+      "brier_diff_ci": [
+        -0.0,
+        0.0
+      ],
+      "ece_after_recal": 0.0247,
+      "ece_after_recal_diff_ci": [
+        -0.0018,
+        0.0007
+      ],
+      "brier_after_recal": 0.05231,
+      "brier_after_recal_diff_ci": [
+        -0.0,
+        0.0
+      ],
+      "mean_abs_prob_change": 0.0001,
+      "mean_prob_shift": 0.0
+    },
+    "int8_minmax": {
+      "c": 0.818,
+      "c_diff": -0.0325,
+      "c_diff_ci": [
+        -0.0433,
+        -0.0202
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0572,
+        "MCL": -0.0452,
+        "Medial Meniscus": -0.0181,
+        "Lateral Meniscus": -0.0462,
+        "Medial OA": -0.0257,
+        "Lateral OA": -0.0405,
+        "PF OA": -0.032,
+        "Effusion": -0.0225,
+        "Synovitis": -0.0109,
+        "Baker's": -0.0332,
+        "Contusion": -0.0385,
+        "Fracture": -0.0193
+      },
+      "ece": 0.1369,
+      "ece_diff_ci": [
+        0.0852,
+        0.0982
+      ],
+      "ece_equal_count": 0.1399,
+      "ece_equal_count_diff_ci": [
+        0.089,
+        0.1029
+      ],
+      "brier": 0.09607,
+      "brier_diff_ci": [
+        0.039,
+        0.0443
+      ],
+      "ece_after_recal": 0.0307,
+      "ece_after_recal_diff_ci": [
+        -0.0014,
+        0.0108
+      ],
+      "brier_after_recal": 0.06628,
+      "brier_after_recal_diff_ci": [
+        0.01231,
+        0.01542
+      ],
+      "mean_abs_prob_change": 0.15,
+      "mean_prob_shift": -0.0776
+    },
+    "int8_minmax_core": {
+      "c": 0.8467,
+      "c_diff": -0.0038,
+      "c_diff_ci": [
+        -0.0097,
+        0.0018
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0088,
+        "MCL": 0.0088,
+        "Medial Meniscus": 0.0009,
+        "Lateral Meniscus": -0.0073,
+        "Medial OA": -0.0044,
+        "Lateral OA": -0.0038,
+        "PF OA": -0.0052,
+        "Effusion": -0.0005,
+        "Synovitis": -0.0146,
+        "Baker's": -0.0043,
+        "Contusion": -0.0102,
+        "Fracture": 0.0043
+      },
+      "ece": 0.0459,
+      "ece_diff_ci": [
+        0.0009,
+        0.0079
+      ],
+      "ece_equal_count": 0.0457,
+      "ece_equal_count_diff_ci": [
+        0.0011,
+        0.0083
+      ],
+      "brier": 0.05619,
+      "brier_diff_ci": [
+        0.00131,
+        0.00247
+      ],
+      "ece_after_recal": 0.0226,
+      "ece_after_recal_diff_ci": [
+        -0.0057,
+        0.0021
+      ],
+      "brier_after_recal": 0.05306,
+      "brier_after_recal_diff_ci": [
+        0.00029,
+        0.00115
+      ],
+      "mean_abs_prob_change": 0.0249,
+      "mean_prob_shift": -0.012
+    },
+    "int8_percentile": {
+      "c": 0.8329,
+      "c_diff": -0.0175,
+      "c_diff_ci": [
+        -0.0273,
+        -0.009
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0354,
+        "MCL": -0.007,
+        "Medial Meniscus": -0.0062,
+        "Lateral Meniscus": -0.0231,
+        "Medial OA": -0.0191,
+        "Lateral OA": -0.025,
+        "PF OA": -0.0121,
+        "Effusion": -0.0201,
+        "Synovitis": -0.0146,
+        "Baker's": -0.0143,
+        "Contusion": -0.0258,
+        "Fracture": -0.0075
+      },
+      "ece": 0.1089,
+      "ece_diff_ci": [
+        0.0583,
+        0.0697
+      ],
+      "ece_equal_count": 0.1096,
+      "ece_equal_count_diff_ci": [
+        0.0605,
+        0.0718
+      ],
+      "brier": 0.08023,
+      "brier_diff_ci": [
+        0.02377,
+        0.02779
+      ],
+      "ece_after_recal": 0.026,
+      "ece_after_recal_diff_ci": [
+        -0.0044,
+        0.0064
+      ],
+      "brier_after_recal": 0.05982,
+      "brier_after_recal_diff_ci": [
+        0.00644,
+        0.00861
+      ],
+      "mean_abs_prob_change": 0.1075,
+      "mean_prob_shift": -0.0649
+    },
+    "int8_percentile_core": {
+      "c": 0.8462,
+      "c_diff": -0.0043,
+      "c_diff_ci": [
+        -0.0105,
+        0.0006
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0066,
+        "MCL": 0.0119,
+        "Medial Meniscus": 0.0004,
+        "Lateral Meniscus": -0.0044,
+        "Medial OA": -0.002,
+        "Lateral OA": -0.0028,
+        "PF OA": -0.0083,
+        "Effusion": -0.0004,
+        "Synovitis": -0.0401,
+        "Baker's": -0.007,
+        "Contusion": -0.0071,
+        "Fracture": 0.015
+      },
+      "ece": 0.0457,
+      "ece_diff_ci": [
+        0.0007,
+        0.0073
+      ],
+      "ece_equal_count": 0.0446,
+      "ece_equal_count_diff_ci": [
+        0.0007,
+        0.0075
+      ],
+      "brier": 0.05556,
+      "brier_diff_ci": [
+        0.00071,
+        0.00172
+      ],
+      "ece_after_recal": 0.0241,
+      "ece_after_recal_diff_ci": [
+        -0.0048,
+        0.0028
+      ],
+      "brier_after_recal": 0.05275,
+      "brier_after_recal_diff_ci": [
+        4e-05,
+        0.0008
+      ],
+      "mean_abs_prob_change": 0.0219,
+      "mean_prob_shift": -0.0099
+    },
+    "qat_int8_minmax": {
+      "c": 0.8004,
+      "c_diff": -0.0501,
+      "c_diff_ci": [
+        -0.0636,
+        -0.0371
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.084,
+        "MCL": -0.0947,
+        "Medial Meniscus": -0.027,
+        "Lateral Meniscus": -0.057,
+        "Medial OA": -0.0339,
+        "Lateral OA": -0.0573,
+        "PF OA": -0.0302,
+        "Effusion": -0.0399,
+        "Synovitis": -0.0693,
+        "Baker's": -0.0466,
+        "Contusion": -0.0438,
+        "Fracture": -0.0171
+      },
+      "ece": 0.1493,
+      "ece_diff_ci": [
+        0.096,
+        0.1109
+      ],
+      "ece_equal_count": 0.1541,
+      "ece_equal_count_diff_ci": [
+        0.1025,
+        0.1168
+      ],
+      "brier": 0.10501,
+      "brier_diff_ci": [
+        0.04741,
+        0.05334
+      ],
+      "ece_after_recal": 0.0342,
+      "ece_after_recal_diff_ci": [
+        0.0013,
+        0.0146
+      ],
+      "brier_after_recal": 0.06964,
+      "brier_after_recal_diff_ci": [
+        0.01556,
+        0.01886
+      ],
+      "mean_abs_prob_change": 0.1684,
+      "mean_prob_shift": -0.0818
+    },
+    "qat_int8_minmax_core": {
+      "c": 0.8447,
+      "c_diff": -0.0058,
+      "c_diff_ci": [
+        -0.0124,
+        -0.0002
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.016,
+        "MCL": 0.0005,
+        "Medial Meniscus": 0.0004,
+        "Lateral Meniscus": -0.0046,
+        "Medial OA": 0.0001,
+        "Lateral OA": -0.0004,
+        "PF OA": -0.0107,
+        "Effusion": -0.0058,
+        "Synovitis": -0.0182,
+        "Baker's": -0.0043,
+        "Contusion": -0.0056,
+        "Fracture": -0.0053
+      },
+      "ece": 0.0429,
+      "ece_diff_ci": [
+        -0.0013,
+        0.0057
+      ],
+      "ece_equal_count": 0.0422,
+      "ece_equal_count_diff_ci": [
+        -0.0015,
+        0.0054
+      ],
+      "brier": 0.05539,
+      "brier_diff_ci": [
+        0.00058,
+        0.00162
+      ],
+      "ece_after_recal": 0.0225,
+      "ece_after_recal_diff_ci": [
+        -0.0056,
+        0.0025
+      ],
+      "brier_after_recal": 0.05287,
+      "brier_after_recal_diff_ci": [
+        0.00014,
+        0.00099
+      ],
+      "mean_abs_prob_change": 0.0264,
+      "mean_prob_shift": -0.001
+    },
+    "qat_int8_percentile": {
+      "c": 0.8254,
+      "c_diff": -0.025,
+      "c_diff_ci": [
+        -0.0354,
+        -0.0152
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0377,
+        "MCL": -0.0339,
+        "Medial Meniscus": -0.0107,
+        "Lateral Meniscus": -0.0358,
+        "Medial OA": -0.0187,
+        "Lateral OA": -0.0269,
+        "PF OA": -0.0099,
+        "Effusion": -0.0251,
+        "Synovitis": -0.0584,
+        "Baker's": -0.0079,
+        "Contusion": -0.0278,
+        "Fracture": -0.0075
+      },
+      "ece": 0.1058,
+      "ece_diff_ci": [
+        0.055,
+        0.0673
+      ],
+      "ece_equal_count": 0.1054,
+      "ece_equal_count_diff_ci": [
+        0.0564,
+        0.0687
+      ],
+      "brier": 0.0799,
+      "brier_diff_ci": [
+        0.02337,
+        0.02758
+      ],
+      "ece_after_recal": 0.0264,
+      "ece_after_recal_diff_ci": [
+        -0.0037,
+        0.0071
+      ],
+      "brier_after_recal": 0.06077,
+      "brier_after_recal_diff_ci": [
+        0.00728,
+        0.00956
+      ],
+      "mean_abs_prob_change": 0.1131,
+      "mean_prob_shift": -0.0439
+    },
+    "qat_int8_percentile_core": {
+      "c": 0.8435,
+      "c_diff": -0.0069,
+      "c_diff_ci": [
+        -0.0127,
+        -0.0016
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0114,
+        "MCL": -0.0028,
+        "Medial Meniscus": -0.0015,
+        "Lateral Meniscus": -0.0052,
+        "Medial OA": 0.0008,
+        "Lateral OA": -0.0011,
+        "PF OA": -0.0108,
+        "Effusion": -0.0026,
+        "Synovitis": -0.0328,
+        "Baker's": -0.0027,
+        "Contusion": -0.0046,
+        "Fracture": -0.0086
+      },
+      "ece": 0.0413,
+      "ece_diff_ci": [
+        -0.0021,
+        0.0053
+      ],
+      "ece_equal_count": 0.0412,
+      "ece_equal_count_diff_ci": [
+        -0.0021,
+        0.0051
+      ],
+      "brier": 0.05552,
+      "brier_diff_ci": [
+        0.00067,
+        0.00167
+      ],
+      "ece_after_recal": 0.021,
+      "ece_after_recal_diff_ci": [
+        -0.0071,
+        0.0013
+      ],
+      "brier_after_recal": 0.05298,
+      "brier_after_recal_diff_ci": [
+        0.00024,
+        0.00105
+      ],
+      "mean_abs_prob_change": 0.0244,
+      "mean_prob_shift": 0.0015
+    },
+    "qat_plain": {
+      "c": 0.8467,
+      "c_diff": -0.0037,
+      "c_diff_ci": [
+        -0.008,
+        0.0006
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0027,
+        "MCL": -0.0122,
+        "Medial Meniscus": -0.004,
+        "Lateral Meniscus": -0.0004,
+        "Medial OA": 0.0015,
+        "Lateral OA": -0.0017,
+        "PF OA": -0.0066,
+        "Effusion": -0.0057,
+        "Synovitis": -0.0146,
+        "Baker's": 0.0058,
+        "Contusion": -0.0011,
+        "Fracture": -0.0032
+      },
+      "ece": 0.0414,
+      "ece_diff_ci": [
+        -0.0024,
+        0.0041
+      ],
+      "ece_equal_count": 0.0395,
+      "ece_equal_count_diff_ci": [
+        -0.0033,
+        0.0036
+      ],
+      "brier": 0.05479,
+      "brier_diff_ci": [
+        2e-05,
+        0.00097
+      ],
+      "ece_after_recal": 0.0228,
+      "ece_after_recal_diff_ci": [
+        -0.0044,
+        0.0024
+      ],
+      "brier_after_recal": 0.05278,
+      "brier_after_recal_diff_ci": [
+        0.00015,
+        0.0008
+      ],
+      "mean_abs_prob_change": 0.0203,
+      "mean_prob_shift": 0.0087
+    }
+  }
+}
