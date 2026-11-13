@@ -19,6 +19,7 @@ import subprocess
 import sys
 import time
 import types
+import warnings
 import zlib
 from multiprocessing import Pool
 
@@ -74,6 +75,12 @@ DEFAULTS = {
     "init_from": None,  # Weights to start training from: a local path or a file name under /kaggle/input.
     "qat": False,  # Fine-tune the encoder under simulated INT8, then save plain weights for the usual INT8 conversion.
     "qat_observe": 100,  # Forward passes that only measure activation ranges before quantization noise starts.
+    # Adaptive sampling study, Phase A.
+    "sampling": "uniform",  # Window positions when scoring: "uniform", "random" (independent, sorted) or "centre" (denser mid-series).
+    "oracle_k": [],  # With eval_from: score densely, keep the top K windows per study by the model's own attention, rescore.
+    "dense_k": 24,  # Windows per slot in the oracle's dense pass.
+    "dump_attention": False,  # With oracle_k: save each validation study's window attention (study-level; never published).
+    "eval_gold": False,  # With eval_from: also score the gold studies against the official radiologist labels.
 }
 
 # DINOv2's patch size is 14, so 252 px is the nearest valid size to 256.
@@ -97,6 +104,7 @@ MODEL_OVERRIDES = {"vit_small_patch14_dinov2": {"res": 252},
                    "convnext_tiny@tf_qat_eval": {"head": "attn_tf", "eval_from": "convnext_tiny_tf_qat_model_ema.pt"},
                    # Stage 4: the best Stage 3 arm, scored from its saved weights.
                    "convnext_tiny@tf_eval": {"head": "attn_tf", "eval_from": "convnext_tiny_tf_model_ema.pt"},
+                   "convnext_tiny@tf_gold": {"head": "attn_tf", "eval_from": "convnext_tiny_tf_model_ema.pt", "eval_gold": True},
                    "vit_small_patch14_dinov2@llrd_avg": {"res": 252, "lr": 5e-5, "layer_decay": 0.75, "global_pool": "avg"}}
 # Stage 3 arms, applied to any encoder as "name@variant", on top of the encoder's own settings.
 VARIANTS = {"mean": {"head": "mean"}, "tf": {"head": "attn_tf"}, "r192": {"res": 192}, "s5": {"slices": 5},
@@ -104,7 +112,16 @@ VARIANTS = {"mean": {"head": "mean"}, "tf": {"head": "attn_tf"}, "r192": {"res":
             "gap35": {"slice_gap_mm": 3.5},
             # The saved Stage 2 model, scored at fewer windows without training.
             "eval": {"eval_from": "{arch}_model_ema.pt"},
-            "qat": {"qat": True, "init_from": "{arch}_model_ema.pt", "epochs": 3, "planned_epochs": 3, "lr": 1e-5, "lr_head": 5e-5}}
+            "qat": {"qat": True, "init_from": "{arch}_model_ema.pt", "epochs": 3, "planned_epochs": 3, "lr": 1e-5, "lr_head": 5e-5},
+            # Phase A: trained and scored at the same budget (windows per slot x 6 slots).
+            "w18": {"k_train": 3, "k_eval": 3, "eval_windows": []},
+            "w36": {"k_train": 6, "k_eval": 6, "eval_windows": [3]},
+            "w72": {"k_train": 12, "k_eval": 12},
+            # Phase A: a saved model scored with other window positions, by its own attention, and on gold.
+            "random": {"eval_from": "{arch}_model_ema.pt", "sampling": "random"},
+            "centre": {"eval_from": "{arch}_model_ema.pt", "sampling": "centre"},
+            "oracle": {"eval_from": "{arch}_model_ema.pt", "oracle_k": [18, 36, 72], "dump_attention": True, "eval_gold": True},
+            "gold": {"eval_from": "{arch}_model_ema.pt", "eval_gold": True}}
 SESSION_START = time.time()
 
 LABELS = ["ACL", "MCL", "Medial Meniscus", "Lateral Meniscus", "Medial OA", "Lateral OA",
@@ -315,15 +332,25 @@ def macro_auc_thresholded(y, p):
     return float(np.nanmean(each)), each
 
 
-def window_centres(n, k, train, lo=0.04, hi=0.96):
-    """k slice indices (centres of 3-slice windows) spread over the series."""
+def window_centres(n, k, train, lo=0.04, hi=0.96, mode="uniform", rng=None):
+    """k slice indices (centres of 3-slice windows) spread over the series.
+
+    Training draws one position in each of k equal strata. Scoring uses `mode`: "uniform" (evenly spaced), "random"
+    (k independent positions, sorted) or "centre" (quantiles of a triangular distribution, so denser mid-series).
+    """
     a, b = max(1.0, lo * (n - 1)), min(n - 2.0, hi * (n - 1))
     if b < a:
         a = b = (n - 1) / 2
     if train:
         edges = np.linspace(a, b, k + 1)
         c = edges[:-1] + np.random.rand(k) * (edges[1:] - edges[:-1])
+    elif mode == "random":
+        c = np.sort((rng or np.random.default_rng()).uniform(a, b, k))
+    elif mode == "centre":
+        q = (np.arange(k) + 0.5) / k
+        c = a + (b - a) * np.where(q < 0.5, np.sqrt(q / 2), 1 - np.sqrt((1 - q) / 2))
     else:
+        assert mode == "uniform", f"unknown sampling {mode}"
         c = np.linspace(a, b, k)
     return np.clip(np.round(c).astype(int), 1, max(1, n - 2))
 
@@ -482,6 +509,11 @@ def run(cfg):
             self.cls_b = nn.Parameter(torch.zeros(len(LABELS)))
 
         def forward(self, x, mask, pos, train):
+            feat, pos = self.encode(x, mask, pos, train)
+            return self.head(feat, mask, pos)
+
+        def encode(self, x, mask, pos, train):
+            """Encoder features [b, slots, k, d] for every window of the slots that exist, and their positions."""
             b, s, k = x.shape[:3]
             keep = mask.view(-1)  # Run the encoder only on series that exist.
             flat = x.view(b * s, k, *x.shape[3:])[keep].flatten(0, 1)
@@ -496,25 +528,33 @@ def run(cfg):
                 encoded = self.enc(views)
             feat = encoded.new_zeros(b * s, k, encoded.shape[-1])
             feat[keep] = encoded.view(-1, k, encoded.shape[-1])
-            return self.head(feat.view(b, s, k, -1), mask, pos)
+            return feat.view(b, s, k, -1), pos
 
-        def head(self, feat, mask, pos):
-            """Study-level part: encoder features [b, slots, k, d] to 12 logits. Exported on its own for CPU timing."""
+        def head(self, feat, mask, pos, wmask=None, return_weights=False):
+            """Study-level part: encoder features [b, slots, k, d] to 12 logits. Exported on its own for CPU timing.
+
+            wmask [b, slots, k] drops windows, exactly as if they had not been encoded. return_weights also gives the
+            attention [b, windows, 12] (None for the mean head).
+            """
             b, s, k = feat.shape[:3]
             slot = torch.arange(s, device=feat.device).view(1, s, 1).expand(b, s, k)
             h = self.proj(feat) + self.slot_emb(slot) + self.pos_emb(pos.unsqueeze(-1).to(feat.dtype))
             h = h.view(b, s * k, -1)
             pad = ~mask.unsqueeze(-1).expand(b, s, k).reshape(b, s * k)
+            if wmask is not None:
+                pad = pad | ~wmask.reshape(b, s * k)
             pad = pad & ~pad.all(1, keepdim=True)  # A study with no usable series attends to everything.
             if self.mix is not None:
                 h = self.mix(h, src_key_padding_mask=pad)
             if cfg["head"] == "mean":  # The same pooled vector for every finding.
                 keep_w = (~pad).to(h.dtype).unsqueeze(-1)
                 pooled = ((h * keep_w).sum(1) / keep_w.sum(1).clamp_min(1)).unsqueeze(1)
-                return (pooled * self.cls_w).sum(-1) + self.cls_b
+                logits = (pooled * self.cls_w).sum(-1) + self.cls_b
+                return (logits, None) if return_weights else logits
             weights = self.att(h).float().masked_fill(pad.unsqueeze(-1), -1e4).softmax(1)
             pooled = torch.einsum("btc,btd->bcd", weights.to(h.dtype), h)
-            return (pooled * self.cls_w).sum(-1) + self.cls_b
+            logits = (pooled * self.cls_w).sum(-1) + self.cls_b
+            return (logits, weights) if return_weights else logits
 
     class WeightFakeQuant(nn.Module):
         """Per-channel symmetric 7-bit weights, as ONNX Runtime's reduce_range gives. Gradients pass straight through."""
@@ -686,8 +726,17 @@ def run(cfg):
     say(f"studies: {report['studies']}")
     save_report()
 
+    gold_part = None
+    if cfg["eval_gold"]:
+        assert cfg["eval_from"], "gold studies are scored only from saved weights, never in a training run"
+        gold_part = train_df[train_df["StudyInstanceUID"].isin(gold)].reset_index(drop=True)
+        for name in conf_cols:
+            gold_part[name] = 1.0
+
     # Preprocess only the series this run needs.
     used = set(train_part["StudyInstanceUID"]) | set(val_part["StudyInstanceUID"])
+    if gold_part is not None:
+        used |= set(gold_part["StudyInstanceUID"])
     used_series = series_df[series_df["StudyInstanceUID"].isin(used)]
     jobs = [(f"{comp}/train_series/{a}/{b}", b, p, cfg["cache_dir"]) for a, b, p in
             zip(used_series.StudyInstanceUID, used_series.SeriesInstanceUID, used_series.Anatomical_Plane)]
@@ -696,6 +745,12 @@ def run(cfg):
     reused_cache = os.path.exists(shared_meta)  # An earlier model in this session already preprocessed the data.
     if reused_cache:
         meta = pd.read_csv(shared_meta, dtype={"series": str})
+        # An earlier model in this session may have needed fewer series (gold studies are added only for scoring).
+        missing = [job for job in jobs if job[1] not in set(meta["series"])]
+        if missing:
+            with Pool(cfg["preprocess_workers"]) as workers:
+                meta = pd.concat([meta, pd.DataFrame(workers.map(_cache_job, missing, chunksize=4))], ignore_index=True)
+            meta.to_csv(shared_meta, index=False)
         text_cols = ["scanner", "tag", "error"]
         meta[text_cols] = meta[text_cols].astype(object).where(meta[text_cols].notna(), "")
     else:
@@ -778,7 +833,9 @@ def run(cfg):
                 vol = np.load(f"{cfg['cache_dir']}/{series}.npy", mmap_mode="r")
                 vol = to_common_side(vol, PLANES[s % 3], side_of.get(self.studies[i], ""))
                 n = len(vol)
-                centres = window_centres(n, self.k, self.train)
+                # Random scoring positions are fixed per study and slot, so a rerun scores the same windows.
+                centres = window_centres(n, self.k, self.train, mode=cfg["sampling"],
+                                         rng=np.random.default_rng([cfg["seed"], i, s]))
                 # 2.5D: neighbouring slices as channels. 3D: one slice repeated, because depth is the clip axis.
                 step = step_of.get(series, 1)
                 x[s] = np.stack([vol[[j, j, j] if is_3d else window_slices(j, n, chans, step)] for j in centres])
@@ -852,6 +909,81 @@ def run(cfg):
                 os.path.join(cfg["out_dir"], f"val_predictions_w{k * N_SLOTS}.csv"))
             say(f"windows {k * N_SLOTS}: {report['eval_windows'][str(k * N_SLOTS)]['within_scanner_c']}")
             save_report()
+
+    def rate(p, y=None, keep_strata=None):
+        """Concordance and thresholded AUC on the validation studies, the usual report entry."""
+        y = val_y if y is None else y
+        macro, each = within_scanner_concordance(y, p, strata if keep_strata is None else keep_strata)
+        return {"within_scanner_c": round(macro, 4), "auc_thresholded": round(macro_auc_thresholded(y, p)[0], 4),
+                "per_finding_c": {name: round(value, 4) for name, value in zip(LABELS, each)}}
+
+    @torch.no_grad()
+    def score_oracle(net):
+        """Upper bound for choosing windows before the encoder: keep the windows the model itself attends to most.
+
+        One dense pass (dense_k windows per slot) gives features and attention; importance is the attention averaged over
+        the 12 findings. "global" keeps the top K windows of the study; "slot" keeps K/6 per slot, like uniform sampling.
+        Masking windows in the head equals not encoding them, because the encoder sees each window on its own.
+        """
+        assert not is_3d and cfg["head"] != "mean", "the oracle needs the 2.5D attention heads"
+        net.eval()
+        loader = torch.utils.data.DataLoader(StudyDataset(val_part, cfg["dense_k"], False), batch_size=cfg["batch"],
+                                             shuffle=False, num_workers=cfg["workers"], pin_memory=use_amp)
+        outs, dumps = {"dense": []}, {"weights": [], "pos": [], "mask": []}
+        for x, mask, pos, _, _ in loader:
+            x, mask, pos = x.to(device, non_blocking=True), mask.to(device), pos.to(device)
+            b, s, k = x.shape[:3]
+            valid = mask.unsqueeze(-1).expand(b, s, k)
+            with torch.amp.autocast(device, enabled=use_amp):
+                feat, pos_used = net.encode(x, mask, pos, False)
+                logits, weights = net.head(feat, mask, pos_used, return_weights=True)
+                outs["dense"].append(torch.sigmoid(logits.float()).cpu())
+                importance = weights.mean(-1).view(b, s, k).masked_fill(~valid, -1.0)
+                for K in cfg["oracle_k"]:
+                    keep = torch.zeros(b, s * k, dtype=torch.bool, device=device)
+                    keep.scatter_(1, importance.view(b, -1).topk(min(K, s * k), dim=1).indices, True)
+                    per_slot = torch.zeros(b, s, k, dtype=torch.bool, device=device)
+                    per_slot.scatter_(2, importance.topk(min(k, max(1, K // N_SLOTS)), dim=2).indices, True)
+                    for name, wmask in ((f"global{K}", keep.view(b, s, k) & valid), (f"slot{K}", per_slot & valid)):
+                        out = net.head(feat, mask, pos_used, wmask=wmask)
+                        outs.setdefault(name, []).append(torch.sigmoid(out.float()).cpu())
+            if cfg["dump_attention"]:
+                dumps["weights"].append(weights.half().cpu())
+                dumps["pos"].append(pos_used.half().cpu())
+                dumps["mask"].append(mask.cpu())
+        report["oracle"] = {"dense_windows": cfg["dense_k"] * N_SLOTS}
+        for name, parts in outs.items():
+            p = torch.cat(parts).numpy()
+            report["oracle"][name] = rate(p)
+            pd.DataFrame(p, columns=LABELS, index=val_part["StudyInstanceUID"]).to_csv(
+                os.path.join(cfg["out_dir"], f"val_predictions_oracle_{name}.csv"))
+            say(f"oracle {name}: {report['oracle'][name]['within_scanner_c']}")
+        if cfg["dump_attention"]:
+            np.savez_compressed(os.path.join(cfg["out_dir"], "attention_dense.npz"), study=val_part["StudyInstanceUID"].to_numpy(),
+                                weights=torch.cat(dumps["weights"]).numpy(), pos=torch.cat(dumps["pos"]).numpy(),
+                                mask=torch.cat(dumps["mask"]).numpy(), labels=np.array(LABELS))
+        save_report()
+
+    def score_gold(net, draws=2000):
+        """AUC against the official radiologist labels of the gold studies, which no training or selection has seen."""
+        loader = torch.utils.data.DataLoader(StudyDataset(gold_part, cfg["k_eval"], False), batch_size=cfg["batch"],
+                                             shuffle=False, num_workers=cfg["workers"], pin_memory=use_amp)
+        p = predict(net, loader)
+        y = gold_part[LABELS].to_numpy(np.float32)
+        macro, each = macro_auc_thresholded(y, p)
+        rng = np.random.default_rng(0)
+        boots = []
+        for _ in range(draws):
+            pick = rng.integers(0, len(y), len(y))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)  # A draw can leave a finding with one class.
+                boots.append(macro_auc_thresholded(y[pick], p[pick])[0])
+        report["gold"] = {"studies": len(y), "windows": cfg["k_eval"] * N_SLOTS, "macro_auc": round(macro, 4),
+                          "macro_auc_95": [round(float(np.nanpercentile(boots, q)), 4) for q in (2.5, 97.5)],
+                          "per_finding_auc": {name: round(value, 4) for name, value in zip(LABELS, each)}}
+        pd.DataFrame(p, columns=LABELS, index=gold_part["StudyInstanceUID"]).to_csv(os.path.join(cfg["out_dir"], "gold_predictions.csv"))
+        say(f"gold: {report['gold']['macro_auc']} {report['gold']['macro_auc_95']}")
+        save_report()
 
     def window_views(x, mask):
         """The encoder's input for a batch of studies, exactly as KneeNet.forward builds it."""
@@ -1002,12 +1134,14 @@ def run(cfg):
             save_report()
             return report
         preds = predict(ema)
-        macro, each = within_scanner_concordance(val_y, preds, strata)
-        report["evaluated"] = {"within_scanner_c": round(macro, 4),
-                               "per_finding_c": {name: round(value, 4) for name, value in zip(LABELS, each)}}
+        report["evaluated"] = {**rate(preds), "sampling": cfg["sampling"]}
         say(f"evaluated {cfg['eval_from']}: {report['evaluated']['within_scanner_c']}")
         pd.DataFrame(preds, columns=LABELS, index=val_part["StudyInstanceUID"]).to_csv(os.path.join(cfg["out_dir"], "val_predictions.csv"))
         score_windows(ema)
+        if cfg["oracle_k"]:
+            score_oracle(ema)
+        if cfg["eval_gold"]:
+            score_gold(ema)
         report["status"] = "evaluated"
         save_report()
         return report

@@ -186,6 +186,33 @@ def test_end_to_end(tmp):
     before = pd.read_csv(f"{out}/val_predictions.csv")[ts.LABELS].to_numpy()
     after = pd.read_csv(f"{tmp}/evaluated/val_predictions.csv")[ts.LABELS].to_numpy()
     assert np.allclose(before, after, atol=1e-4), "a saved model scored differently"
+    # Phase A: the attention oracle, the attention dump and gold scoring, from saved weights.
+    oracle = ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/oracle", "oracle_k": [6, 12], "dense_k": 2,
+                     "dump_attention": True, "eval_gold": True, "eval_windows": []})
+    assert oracle["status"] == "evaluated" and oracle["oracle"]["dense_windows"] == 12, oracle.get("oracle")
+    read = lambda name: pd.read_csv(f"{tmp}/oracle/val_predictions_oracle_{name}.csv")[ts.LABELS].to_numpy()
+    dense = read("dense")
+    for name in ("global12", "slot12"):  # Keeping every window must change nothing.
+        assert np.allclose(read(name), dense, atol=1e-5), name
+    assert read("global6").shape == dense.shape and np.isfinite(read("slot6")).all()
+    dump = np.load(f"{tmp}/oracle/attention_dense.npz")
+    assert dump["weights"].shape == (3, 12, len(ts.LABELS)) and dump["mask"].shape == (3, 6)
+    assert np.allclose(dump["weights"].astype(np.float32).sum(1), 1, atol=1e-2), "attention must sum to 1 per finding"
+    gold_pred = pd.read_csv(f"{tmp}/oracle/gold_predictions.csv", dtype={"StudyInstanceUID": str})
+    assert set(gold_pred["StudyInstanceUID"]) == {"1.0", "1.1"} and oracle["gold"]["studies"] == 2
+    assert gold_pred[ts.LABELS].notna().all().all()
+    try:
+        ts.run({**cfg, "eval_gold": True, "out_dir": f"{tmp}/gold_train"})
+        raise AssertionError("a training run must refuse gold studies")
+    except AssertionError as error:
+        assert "never in a training run" in str(error), error
+    # Random scoring positions are fixed per study, so two runs agree; they differ from uniform positions.
+    runs = [ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/random{r}", "sampling": "random",
+                    "eval_windows": []}) for r in (0, 1)]
+    first, second_random = (pd.read_csv(f"{tmp}/random{r}/val_predictions.csv")[ts.LABELS].to_numpy() for r in (0, 1))
+    assert np.allclose(first, second_random) and runs[0]["evaluated"]["sampling"] == "random"
+    assert ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/centre", "sampling": "centre",
+                   "eval_windows": []})["status"] == "evaluated"
     # Stage 4: each precision scores the same model; FP32 reproduces it and INT8 stays close.
     precisions = ["fp32", "fp16", "int8_minmax", "int8_percentile", "int8_minmax_core", "int8_percentile_core"]
     quant = ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/stage4", "precisions": precisions,
@@ -288,6 +315,22 @@ def test_stage3_rules():
     assert tiny["head"] == "mean" and tiny["batch"] == 2 and tiny["accum"] == 4, "a variant lost the encoder's settings"
     assert ts.settings_for({**base, "backbone": "convnext_atto@eval"})["eval_from"] == "convnext_atto_model_ema.pt"
     assert ts.settings_for({**base, "backbone": "convnext_atto@r192"})["res"] == 192
+    w18 = ts.settings_for({**base, "backbone": "convnext_atto@w18"})
+    assert w18["k_train"] == 3 and w18["k_eval"] == 3 and w18["eval_windows"] == []
+    oracle = ts.settings_for({**base, "backbone": "convnext_atto@oracle"})
+    assert oracle["eval_from"] == "convnext_atto_model_ema.pt" and oracle["oracle_k"] == [18, 36, 72] and oracle["eval_gold"]
+    assert ts.settings_for({**base, "backbone": "convnext_tiny@tf_gold"})["head"] == "attn_tf"
+    # Scoring positions: every mode stays inside the series and returns k sorted centres.
+    for mode in ("uniform", "random", "centre"):
+        c = ts.window_centres(30, 12, False, mode=mode, rng=np.random.default_rng(0))
+        assert len(c) == 12 and c.min() >= 1 and c.max() <= 28 and np.all(np.diff(c) >= 0), (mode, c)
+    centre = ts.window_centres(100, 12, False, mode="centre")
+    assert np.diff(centre)[5] < np.diff(centre)[0], "centre sampling must be denser mid-series"
+    try:
+        ts.window_centres(30, 12, False, mode="typo")
+        raise AssertionError("an unknown sampling mode must fail")
+    except AssertionError as error:
+        assert "unknown sampling" in str(error)
     dino = ts.settings_for({**base, "backbone": "vit_small_patch14_dinov2@llrd"})
     assert dino["res"] == 252 and dino["layer_decay"] == 0.75
     try:
