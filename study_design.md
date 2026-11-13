@@ -18,6 +18,17 @@ Maximise macro discrimination, subject to running on a CPU within the limits in 
 | H2 | Cutting windows hurts focal findings (MCL, Lateral Meniscus, Fracture) more than global ones (Effusion, Baker's) | Per-finding change |
 | H3 | INT8 post-training quantization loses more discrimination and shifts calibration more than quantization-aware training, and the gap depends on model family | Change in AUC, ECE and Brier score |
 | H4 | Label quality moves AUC more than encoder choice among feasible models | Gold and private score only, because a label-based metric cannot judge its own labels |
+| H5 | At a fixed CPU budget per study, windows chosen by a learned scout give higher AUC than uniform, random or centre-weighted windows, and the gain is largest for the menisci | Paired AUC and concordance at matched measured seconds, 5 folds |
+| H6 | The non-FS series add information: 6 slots beat the 3 FS slots, and most of all for studies missing an FS series in one plane | Paired AUC overall and in the missing-FS subgroups |
+
+## Adaptive sampling study (planned 2026-11-14, before any result)
+
+Written before the runs, so the go/no-go rule cannot be fitted to the results.
+
+- **Phase A, fold 0, ConvNeXt-Atto.** A1: train and score at 18, 36 and 72 windows (`@w18`, `@w36`, `@w72`); the existing models train on 48 random-position windows and score on 72, so earlier fewer-window results mix two mismatches. A2: score saved models with uniform, random and centre-weighted windows. A3: save per-window attention to see whether important positions repeat across studies and differ by finding. A4 (gate): score densely with 24 windows per slot, keep the top 18 or 36 by the model's own attention, and rescore. If top-18 by attention is not within 0.02 AUC of the 72-window score, learned selection has little room and Phase B is reconsidered. A5: score saved models on the 58 gold studies against radiologist labels, with bootstrap intervals; until now only the LLM labels were compared with gold.
+- **Phase B, only if A4 passes.** A cheap scout network scores every candidate window; the top K go to ConvNeXt-Atto. The scout learns from the full model's attention (distillation); Atto is then fine-tuned on scout-chosen windows. Budgets are measured CPU seconds per study, scout included.
+- **Phase C.** 3 FS slots against 6 slots, and slot dropout in training; scored overall and for studies missing sagittal or coronal FS.
+- **Limits fixed in advance.** No patient identifier exists, so splits are by study. Gold labels are used for final scoring only, never for choosing settings.
 
 ## Factors
 
