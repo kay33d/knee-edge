@@ -25,6 +25,7 @@ def main():
         (datasets if args[0] == "--dataset" else settings).append(args[1])
         args = args[2:]
     probe = args[0] == "--probe"
+    fold = next((json.loads(v.split("=", 1)[1]) for v in settings if v.split("=", 1)[0] == "fold"), 0)  # Names the kernel.
     group = args[1] if args[0] == "--group" else None
     names = args[1:] if probe else args[2:] if group else args[:1]
     with open(f"{HERE}/train_stage2.py", encoding="utf-8") as handle:
@@ -37,9 +38,9 @@ def main():
     if probe:
         slug, old, new = "knee-edge-gpu-probe", '"probe_backbones": [],', f'"probe_backbones": {json.dumps(names)},'
     elif group:
-        slug, old, new = f"knee-edge-stage2-{group}-fold0", '"backbones": [],', f'"backbones": {json.dumps(names)},'
+        slug, old, new = f"knee-edge-stage2-{group}-fold{fold}", '"backbones": [],', f'"backbones": {json.dumps(names)},'
     else:
-        slug = "knee-edge-stage2-" + names[0].replace("_", "-") + "-fold0"
+        slug = "knee-edge-stage2-" + names[0].replace("_", "-") + f"-fold{fold}"
         old, new = '"backbone": "resnet50",', f'"backbone": "{names[0]}",'
     assert source.count(old) == 1, old
     folder = f"{HERE}/kernels/{slug}"
