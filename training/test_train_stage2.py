@@ -213,6 +213,18 @@ def test_end_to_end(tmp):
     assert np.allclose(first, second_random) and runs[0]["evaluated"]["sampling"] == "random"
     assert ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/centre", "sampling": "centre",
                    "eval_windows": []})["status"] == "evaluated"
+    # Placement follow-up: several placements in one scoring run. "uniform" there must reproduce the main pass, which
+    # shows each placement reaches the loader workers.
+    placed = ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/placed", "extra_sampling": ["uniform", "midpoint", "centre"]})
+    full = str(cfg["k_eval"] * ts.N_SLOTS)
+    assert set(placed["placements"]) == {"uniform", "midpoint", "centre"} and full in placed["placements"]["centre"], placed.get("placements")
+    main_p = pd.read_csv(f"{tmp}/placed/val_predictions.csv")[ts.LABELS].to_numpy()
+    assert np.allclose(main_p, pd.read_csv(f"{tmp}/placed/val_predictions_uniform_w{full}.csv")[ts.LABELS].to_numpy(), atol=1e-6)
+    for w in [cfg["k_eval"]] + list(cfg.get("eval_windows", ts.DEFAULTS["eval_windows"])):
+        assert os.path.exists(f"{tmp}/placed/val_predictions_midpoint_w{w * ts.N_SLOTS}.csv"), w
+    # Training with centre-weighted positions runs, and the final model is scored with the extra placements too.
+    trained_c = ts.run({**cfg, "out_dir": f"{tmp}/train_centre", "train_sampling": "centre", "sampling": "centre", "extra_sampling": ["midpoint"]})
+    assert trained_c["status"] == "finished" and "midpoint" in trained_c["placements"], trained_c.get("placements")
     # Stage 4: each precision scores the same model; FP32 reproduces it and INT8 stays close.
     precisions = ["fp32", "fp16", "int8_minmax", "int8_percentile", "int8_minmax_core", "int8_percentile_core"]
     quant = ts.run({**cfg, "eval_from": f"{out}/model_ema.pt", "out_dir": f"{tmp}/stage4", "precisions": precisions,
@@ -321,9 +333,30 @@ def test_stage3_rules():
     assert oracle["eval_from"] == "convnext_atto_model_ema.pt" and oracle["oracle_k"] == [18, 36, 72] and oracle["eval_gold"]
     assert ts.settings_for({**base, "backbone": "convnext_tiny@tf_gold"})["head"] == "attn_tf"
     # Scoring positions: every mode stays inside the series and returns k sorted centres.
-    for mode in ("uniform", "random", "centre"):
+    for mode in ("uniform", "midpoint", "random", "centre"):
         c = ts.window_centres(30, 12, False, mode=mode, rng=np.random.default_rng(0))
         assert len(c) == 12 and c.min() >= 1 and c.max() <= 28 and np.all(np.diff(c) >= 0), (mode, c)
+    # Uniform scoring includes both ends; midpoint keeps away from them, where training draws fall on average.
+    assert list(ts.window_centres(30, 3, False)) == [1, 14, 28] and list(ts.window_centres(30, 3, False, mode="midpoint")) == [6, 14, 23]
+    # Training positions: "uniform" is the original draw (one per stratum), unchanged; "centre" maps the same draws inward.
+    np.random.seed(0)
+    old_a, old_b = max(1.0, 0.04 * 29), min(28.0, 0.96 * 29)
+    edges = np.linspace(old_a, old_b, 4)
+    old = np.clip(np.round(edges[:-1] + np.random.rand(3) * (edges[1:] - edges[:-1])).astype(int), 1, 28)
+    np.random.seed(0)
+    assert list(ts.window_centres(30, 3, True)) == list(old)
+    draws = np.concatenate([ts.window_centres(100, 3, True, mode="centre") for _ in range(300)])
+    assert np.abs(draws - 49.5).mean() < np.abs(np.concatenate([ts.window_centres(100, 3, True) for _ in range(300)]) - 49.5).mean()
+    try:
+        ts.window_centres(30, 3, True, mode="random")
+        raise AssertionError("training must refuse a placement it does not support")
+    except AssertionError as error:
+        assert "unknown training sampling" in str(error)
+    place = ts.settings_for({**base, "backbone": "convnext_atto@place", "fold": 2})
+    assert place["eval_from"] == "convnext_atto_fold2_model_ema.pt" and place["extra_sampling"] == ["midpoint", "centre"]
+    w18c = ts.settings_for({**base, "backbone": "convnext_atto@w18c"})
+    assert w18c["k_train"] == 3 and w18c["train_sampling"] == "centre" and w18c["sampling"] == "centre"
+    assert ts.settings_for({**base, "backbone": "convnext_atto@w36_place"})["eval_from"] == "convnext_atto_w36_model_ema.pt"
     centre = ts.window_centres(100, 12, False, mode="centre")
     assert np.diff(centre)[5] < np.diff(centre)[0], "centre sampling must be denser mid-series"
     try:

@@ -76,7 +76,11 @@ DEFAULTS = {
     "qat": False,  # Fine-tune the encoder under simulated INT8, then save plain weights for the usual INT8 conversion.
     "qat_observe": 100,  # Forward passes that only measure activation ranges before quantization noise starts.
     # Adaptive sampling study, Phase A.
-    "sampling": "uniform",  # Window positions when scoring: "uniform", "random" (independent, sorted) or "centre" (denser mid-series).
+    "sampling": "uniform",  # Window positions when scoring: "uniform" (evenly spaced, ends included), "midpoint" (middle of k equal
+    # strata), "random" (independent, sorted) or "centre" (denser mid-series).
+    "train_sampling": "uniform",  # Training positions: "uniform" (one random draw per equal stratum) or "centre" (the same draws
+    # mapped through the centre-weighted distribution).
+    "extra_sampling": [],  # Also score the final model with these placements, at k_eval and every eval_windows budget.
     "oracle_k": [],  # With eval_from: score densely, keep the top K windows per study by the model's own attention, rescore.
     "dense_k": 24,  # Windows per slot in the oracle's dense pass.
     "dump_attention": False,  # With oracle_k: save each validation study's window attention (study-level; never published).
@@ -105,6 +109,9 @@ MODEL_OVERRIDES = {"vit_small_patch14_dinov2": {"res": 252},
                    # Stage 4: the best Stage 3 arm, scored from its saved weights.
                    "convnext_tiny@tf_eval": {"head": "attn_tf", "eval_from": "convnext_tiny_tf_model_ema.pt"},
                    "convnext_tiny@tf_gold": {"head": "attn_tf", "eval_from": "convnext_tiny_tf_model_ema.pt", "eval_gold": True},
+                   # The Phase A models trained at each budget (fold 0), rescored with every placement.
+                   **{f"convnext_atto@w{w}_place": {"eval_from": f"convnext_atto_w{w}_model_ema.pt", "extra_sampling": ["midpoint", "centre"]}
+                      for w in (18, 36, 72)},
                    "vit_small_patch14_dinov2@llrd_avg": {"res": 252, "lr": 5e-5, "layer_decay": 0.75, "global_pool": "avg"}}
 # Stage 3 arms, applied to any encoder as "name@variant", on top of the encoder's own settings.
 VARIANTS = {"mean": {"head": "mean"}, "tf": {"head": "attn_tf"}, "r192": {"res": 192}, "s5": {"slices": 5},
@@ -121,7 +128,11 @@ VARIANTS = {"mean": {"head": "mean"}, "tf": {"head": "attn_tf"}, "r192": {"res":
             "random": {"eval_from": "{arch}_model_ema.pt", "sampling": "random"},
             "centre": {"eval_from": "{arch}_model_ema.pt", "sampling": "centre"},
             "oracle": {"eval_from": "{arch}_model_ema.pt", "oracle_k": [18, 36, 72], "dump_attention": True, "eval_gold": True},
-            "gold": {"eval_from": "{arch}_model_ema.pt", "eval_gold": True}}
+            "gold": {"eval_from": "{arch}_model_ema.pt", "eval_gold": True},
+            # Placement follow-up: each fold's saved model scored with three placements; training at 18 centre-weighted windows.
+            "place": {"eval_from": "{arch}_fold{fold}_model_ema.pt", "extra_sampling": ["midpoint", "centre"]},
+            "w18c": {"k_train": 3, "k_eval": 3, "eval_windows": [], "train_sampling": "centre", "sampling": "centre",
+                     "extra_sampling": ["uniform", "midpoint"]}}
 SESSION_START = time.time()
 
 LABELS = ["ACL", "MCL", "Medial Meniscus", "Lateral Meniscus", "Medial OA", "Lateral OA",
@@ -335,20 +346,25 @@ def macro_auc_thresholded(y, p):
 def window_centres(n, k, train, lo=0.04, hi=0.96, mode="uniform", rng=None):
     """k slice indices (centres of 3-slice windows) spread over the series.
 
-    Training draws one position in each of k equal strata. Scoring uses `mode`: "uniform" (evenly spaced), "random"
-    (k independent positions, sorted) or "centre" (quantiles of a triangular distribution, so denser mid-series).
+    Training draws one position in each of k equal strata; with mode "centre" the draws go through the centre-weighted
+    distribution. Scoring uses `mode`: "uniform" (evenly spaced, both ends included), "midpoint" (the middle of each of
+    k equal strata, which is where training draws fall on average), "random" (k independent positions, sorted) or
+    "centre" (quantiles of a triangular distribution, so denser mid-series).
     """
     a, b = max(1.0, lo * (n - 1)), min(n - 2.0, hi * (n - 1))
     if b < a:
         a = b = (n - 1) / 2
+    centre = lambda q: np.where(q < 0.5, np.sqrt(q / 2), 1 - np.sqrt((1 - q) / 2))  # Triangular quantile function.
     if train:
-        edges = np.linspace(a, b, k + 1)
-        c = edges[:-1] + np.random.rand(k) * (edges[1:] - edges[:-1])
+        assert mode in ("uniform", "centre"), f"unknown training sampling {mode}"
+        q = (np.arange(k) + np.random.rand(k)) / k
+        c = a + (b - a) * (centre(q) if mode == "centre" else q)
     elif mode == "random":
         c = np.sort((rng or np.random.default_rng()).uniform(a, b, k))
     elif mode == "centre":
-        q = (np.arange(k) + 0.5) / k
-        c = a + (b - a) * np.where(q < 0.5, np.sqrt(q / 2), 1 - np.sqrt((1 - q) / 2))
+        c = a + (b - a) * centre((np.arange(k) + 0.5) / k)
+    elif mode == "midpoint":
+        c = a + (b - a) * (np.arange(k) + 0.5) / k
     else:
         assert mode == "uniform", f"unknown sampling {mode}"
         c = np.linspace(a, b, k)
@@ -395,7 +411,7 @@ def settings_for(cfg):
     """The encoder's own settings, then the variant's, then any entry for the exact "name@variant"."""
     base_name, _, variant = cfg["backbone"].partition("@")
     assert not variant or variant in VARIANTS or cfg["backbone"] in MODEL_OVERRIDES, f"unknown variant {variant}"
-    extra = {k: (v.format(arch=base_name) if isinstance(v, str) else v) for k, v in VARIANTS.get(variant, {}).items()}
+    extra = {k: (v.format(arch=base_name, fold=cfg["fold"]) if isinstance(v, str) else v) for k, v in VARIANTS.get(variant, {}).items()}
     return {**cfg, **MODEL_OVERRIDES.get(base_name, {}), **extra, **(MODEL_OVERRIDES.get(cfg["backbone"], {}) if variant else {})}
 
 
@@ -834,7 +850,7 @@ def run(cfg):
                 vol = to_common_side(vol, PLANES[s % 3], side_of.get(self.studies[i], ""))
                 n = len(vol)
                 # Random scoring positions are fixed per study and slot, so a rerun scores the same windows.
-                centres = window_centres(n, self.k, self.train, mode=cfg["sampling"],
+                centres = window_centres(n, self.k, self.train, mode=cfg["train_sampling" if self.train else "sampling"],
                                          rng=np.random.default_rng([cfg["seed"], i, s]))
                 # 2.5D: neighbouring slices as channels. 3D: one slice repeated, because depth is the clip axis.
                 step = step_of.get(series, 1)
@@ -909,6 +925,22 @@ def run(cfg):
                 os.path.join(cfg["out_dir"], f"val_predictions_w{k * N_SLOTS}.csv"))
             say(f"windows {k * N_SLOTS}: {report['eval_windows'][str(k * N_SLOTS)]['within_scanner_c']}")
             save_report()
+
+    def score_placements(net):
+        """The final model with each extra placement, at k_eval and every eval_windows budget."""
+        report["placements"], before = {}, cfg["sampling"]
+        for mode in cfg["extra_sampling"]:
+            cfg["sampling"], report["placements"][mode] = mode, {}
+            for k in [cfg["k_eval"]] + [w for w in cfg["eval_windows"] if w != cfg["k_eval"]]:
+                loader = torch.utils.data.DataLoader(StudyDataset(val_part, k, False), batch_size=cfg["batch"], shuffle=False,
+                                                     num_workers=cfg["workers"], pin_memory=use_amp)
+                p = predict(net, loader)
+                report["placements"][mode][str(k * N_SLOTS)] = rate(p)
+                pd.DataFrame(p, columns=LABELS, index=val_part["StudyInstanceUID"]).to_csv(
+                    os.path.join(cfg["out_dir"], f"val_predictions_{mode}_w{k * N_SLOTS}.csv"))
+                say(f"{mode}, windows {k * N_SLOTS}: {report['placements'][mode][str(k * N_SLOTS)]['within_scanner_c']}")
+                save_report()
+        cfg["sampling"] = before
 
     def rate(p, y=None, keep_strata=None):
         """Concordance and thresholded AUC on the validation studies, the usual report entry."""
@@ -1138,6 +1170,7 @@ def run(cfg):
         say(f"evaluated {cfg['eval_from']}: {report['evaluated']['within_scanner_c']}")
         pd.DataFrame(preds, columns=LABELS, index=val_part["StudyInstanceUID"]).to_csv(os.path.join(cfg["out_dir"], "val_predictions.csv"))
         score_windows(ema)
+        score_placements(ema)
         if cfg["oracle_k"]:
             score_oracle(ema)
         if cfg["eval_gold"]:
@@ -1239,6 +1272,7 @@ def run(cfg):
     torch.save({"model": ema.state_dict(), "config": cfg}, os.path.join(cfg["out_dir"], "model_ema.pt"))
     if not cfg["qat"]:
         score_windows(ema)
+        score_placements(ema)
     report["status"] = "finished"
     save_report()
     say(json.dumps({k: report.get(k) for k in ["cost_estimate", "gpu_peak_gb", "gpu", "status"]}))
