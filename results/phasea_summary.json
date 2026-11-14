@@ -50,6 +50,92 @@
         }
       }
     },
+    "oracle, top by attention per slot [18]": {
+      "windows": 18,
+      "c": 0.8224,
+      "c_diff": -0.0149,
+      "c_diff_ci": [
+        -0.027,
+        -0.0043
+      ],
+      "auc": 0.8653,
+      "menisci_c_diff": -0.0186,
+      "menisci_c_diff_ci": [
+        -0.0328,
+        -0.0049
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0168,
+        "MCL": -0.0194,
+        "Medial Meniscus": -0.0143,
+        "Lateral Meniscus": -0.0229,
+        "Medial OA": 0.0015,
+        "Lateral OA": -0.0151,
+        "PF OA": -0.0042,
+        "Effusion": -0.071,
+        "Synovitis": 0.0036,
+        "Baker's": -0.0192,
+        "Contusion": -0.0043,
+        "Fracture": 0.0032
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8704,
+          "auc_diff": -0.0229
+        },
+        "no sagittal FS": {
+          "auc": 0.8319,
+          "auc_diff": -0.0249
+        },
+        "no coronal FS": {
+          "auc": 0.8115,
+          "auc_diff": -0.0308
+        }
+      }
+    },
+    "oracle, top by attention per study [18]": {
+      "windows": 18,
+      "c": 0.8126,
+      "c_diff": -0.0247,
+      "c_diff_ci": [
+        -0.0357,
+        -0.0138
+      ],
+      "auc": 0.8555,
+      "menisci_c_diff": -0.0244,
+      "menisci_c_diff_ci": [
+        -0.04,
+        -0.0099
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0299,
+        "MCL": -0.0251,
+        "Medial Meniscus": -0.0146,
+        "Lateral Meniscus": -0.0343,
+        "Medial OA": -0.0202,
+        "Lateral OA": -0.0291,
+        "PF OA": -0.0269,
+        "Effusion": -0.0454,
+        "Synovitis": -0.0511,
+        "Baker's": -0.0095,
+        "Contusion": -0.0051,
+        "Fracture": -0.0053
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8592,
+          "auc_diff": -0.0341
+        },
+        "no sagittal FS": {
+          "auc": 0.8252,
+          "auc_diff": -0.0316
+        },
+        "no coronal FS": {
+          "auc": 0.8119,
+          "auc_diff": -0.0305
+        }
+      }
+    },
     "random, trained on 48 [18]": {
       "windows": 18,
       "c": 0.8012,
@@ -90,6 +176,49 @@
         "no coronal FS": {
           "auc": 0.7685,
           "auc_diff": -0.0738
+        }
+      }
+    },
+    "uniform, trained at budget [18]": {
+      "windows": 18,
+      "c": 0.8094,
+      "c_diff": -0.0279,
+      "c_diff_ci": [
+        -0.0398,
+        -0.0152
+      ],
+      "auc": 0.8601,
+      "menisci_c_diff": -0.0805,
+      "menisci_c_diff_ci": [
+        -0.1016,
+        -0.0579
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.027,
+        "MCL": -0.0132,
+        "Medial Meniscus": -0.0863,
+        "Lateral Meniscus": -0.0748,
+        "Medial OA": -0.0042,
+        "Lateral OA": -0.0297,
+        "PF OA": -0.0234,
+        "Effusion": -0.0123,
+        "Synovitis": -0.0109,
+        "Baker's": -0.0314,
+        "Contusion": -0.0237,
+        "Fracture": 0.0021
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8664,
+          "auc_diff": -0.0269
+        },
+        "no sagittal FS": {
+          "auc": 0.8309,
+          "auc_diff": -0.0259
+        },
+        "no coronal FS": {
+          "auc": 0.792,
+          "auc_diff": -0.0503
         }
       }
     },
@@ -179,6 +308,92 @@
         }
       }
     },
+    "oracle, top by attention per slot [36]": {
+      "windows": 36,
+      "c": 0.8362,
+      "c_diff": -0.0011,
+      "c_diff_ci": [
+        -0.0106,
+        0.0081
+      ],
+      "auc": 0.8765,
+      "menisci_c_diff": -0.0047,
+      "menisci_c_diff_ci": [
+        -0.0163,
+        0.0068
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0047,
+        "MCL": -0.0108,
+        "Medial Meniscus": -0.0016,
+        "Lateral Meniscus": -0.0077,
+        "Medial OA": 0.0052,
+        "Lateral OA": -0.0072,
+        "PF OA": 0.0012,
+        "Effusion": -0.044,
+        "Synovitis": 0.0401,
+        "Baker's": 0.0018,
+        "Contusion": 0.0,
+        "Fracture": 0.0139
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8799,
+          "auc_diff": -0.0134
+        },
+        "no sagittal FS": {
+          "auc": 0.8463,
+          "auc_diff": -0.0105
+        },
+        "no coronal FS": {
+          "auc": 0.8371,
+          "auc_diff": -0.0052
+        }
+      }
+    },
+    "oracle, top by attention per study [36]": {
+      "windows": 36,
+      "c": 0.8324,
+      "c_diff": -0.0049,
+      "c_diff_ci": [
+        -0.0127,
+        0.0029
+      ],
+      "auc": 0.8766,
+      "menisci_c_diff": -0.0012,
+      "menisci_c_diff_ci": [
+        -0.0113,
+        0.008
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0047,
+        "MCL": -0.0101,
+        "Medial Meniscus": 0.0065,
+        "Lateral Meniscus": -0.0089,
+        "Medial OA": -0.0025,
+        "Lateral OA": -0.0072,
+        "PF OA": -0.004,
+        "Effusion": -0.0164,
+        "Synovitis": -0.0182,
+        "Baker's": 0.0034,
+        "Contusion": 0.0005,
+        "Fracture": 0.0032
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8797,
+          "auc_diff": -0.0135
+        },
+        "no sagittal FS": {
+          "auc": 0.878,
+          "auc_diff": 0.0211
+        },
+        "no coronal FS": {
+          "auc": 0.8306,
+          "auc_diff": -0.0117
+        }
+      }
+    },
     "random, trained on 48 [36]": {
       "windows": 36,
       "c": 0.8185,
@@ -219,6 +434,49 @@
         "no coronal FS": {
           "auc": 0.7994,
           "auc_diff": -0.0429
+        }
+      }
+    },
+    "uniform, trained at budget [36]": {
+      "windows": 36,
+      "c": 0.8327,
+      "c_diff": -0.0046,
+      "c_diff_ci": [
+        -0.0127,
+        0.0033
+      ],
+      "auc": 0.8838,
+      "menisci_c_diff": -0.0056,
+      "menisci_c_diff_ci": [
+        -0.0185,
+        0.0095
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.026,
+        "MCL": -0.0021,
+        "Medial Meniscus": 0.0071,
+        "Lateral Meniscus": -0.0182,
+        "Medial OA": -0.006,
+        "Lateral OA": -0.01,
+        "PF OA": -0.0054,
+        "Effusion": -0.0021,
+        "Synovitis": -0.0255,
+        "Baker's": 0.0015,
+        "Contusion": 0.011,
+        "Fracture": 0.0203
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8888,
+          "auc_diff": -0.0045
+        },
+        "no sagittal FS": {
+          "auc": 0.8591,
+          "auc_diff": 0.0023
+        },
+        "no coronal FS": {
+          "auc": 0.795,
+          "auc_diff": -0.0473
         }
       }
     },
@@ -308,6 +566,92 @@
         }
       }
     },
+    "oracle, top by attention per slot [72]": {
+      "windows": 72,
+      "c": 0.8405,
+      "c_diff": 0.0032,
+      "c_diff_ci": [
+        -0.003,
+        0.0084
+      ],
+      "auc": 0.886,
+      "menisci_c_diff": 0.0045,
+      "menisci_c_diff_ci": [
+        -0.0044,
+        0.0115
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0015,
+        "MCL": -0.0098,
+        "Medial Meniscus": 0.0064,
+        "Lateral Meniscus": 0.0026,
+        "Medial OA": 0.0058,
+        "Lateral OA": 0.0028,
+        "PF OA": 0.0031,
+        "Effusion": -0.0156,
+        "Synovitis": 0.0219,
+        "Baker's": 0.0119,
+        "Contusion": 0.0022,
+        "Fracture": 0.0053
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8897,
+          "auc_diff": -0.0036
+        },
+        "no sagittal FS": {
+          "auc": 0.8629,
+          "auc_diff": 0.0061
+        },
+        "no coronal FS": {
+          "auc": 0.8445,
+          "auc_diff": 0.0021
+        }
+      }
+    },
+    "oracle, top by attention per study [72]": {
+      "windows": 72,
+      "c": 0.8422,
+      "c_diff": 0.0048,
+      "c_diff_ci": [
+        -0.0003,
+        0.01
+      ],
+      "auc": 0.887,
+      "menisci_c_diff": 0.0087,
+      "menisci_c_diff_ci": [
+        0.0016,
+        0.0156
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0026,
+        "MCL": -0.0036,
+        "Medial Meniscus": 0.0091,
+        "Lateral Meniscus": 0.0084,
+        "Medial OA": 0.0059,
+        "Lateral OA": 0.0017,
+        "PF OA": 0.0043,
+        "Effusion": -0.0069,
+        "Synovitis": 0.0073,
+        "Baker's": 0.0155,
+        "Contusion": 0.0052,
+        "Fracture": 0.0086
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8904,
+          "auc_diff": -0.0029
+        },
+        "no sagittal FS": {
+          "auc": 0.8759,
+          "auc_diff": 0.019
+        },
+        "no coronal FS": {
+          "auc": 0.8377,
+          "auc_diff": -0.0047
+        }
+      }
+    },
     "random, trained on 48 [72]": {
       "windows": 72,
       "c": 0.832,
@@ -348,6 +692,49 @@
         "no coronal FS": {
           "auc": 0.7763,
           "auc_diff": -0.066
+        }
+      }
+    },
+    "uniform, trained at budget [72]": {
+      "windows": 72,
+      "c": 0.831,
+      "c_diff": -0.0064,
+      "c_diff_ci": [
+        -0.0142,
+        0.0016
+      ],
+      "auc": 0.8892,
+      "menisci_c_diff": -0.0004,
+      "menisci_c_diff_ci": [
+        -0.0103,
+        0.0102
+      ],
+      "per_finding_c_diff": {
+        "ACL": -0.0248,
+        "MCL": -0.006,
+        "Medial Meniscus": 0.006,
+        "Lateral Meniscus": -0.0067,
+        "Medial OA": 0.0037,
+        "Lateral OA": -0.0002,
+        "PF OA": 0.0058,
+        "Effusion": -0.0035,
+        "Synovitis": -0.0182,
+        "Baker's": -0.0043,
+        "Contusion": -0.0001,
+        "Fracture": -0.0278
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8937,
+          "auc_diff": 0.0004
+        },
+        "no sagittal FS": {
+          "auc": 0.8561,
+          "auc_diff": -0.0007
+        },
+        "no coronal FS": {
+          "auc": 0.8121,
+          "auc_diff": -0.0302
         }
       }
     },
@@ -393,6 +780,1203 @@
           "auc_diff": 0.0
         }
       }
+    },
+    "dense, all windows [144]": {
+      "windows": 144,
+      "c": 0.8423,
+      "c_diff": 0.005,
+      "c_diff_ci": [
+        0.0006,
+        0.0089
+      ],
+      "auc": 0.8908,
+      "menisci_c_diff": 0.0093,
+      "menisci_c_diff_ci": [
+        0.0024,
+        0.0158
+      ],
+      "per_finding_c_diff": {
+        "ACL": 0.0022,
+        "MCL": -0.0026,
+        "Medial Meniscus": 0.0096,
+        "Lateral Meniscus": 0.009,
+        "Medial OA": 0.0055,
+        "Lateral OA": 0.0019,
+        "PF OA": 0.0033,
+        "Effusion": -0.0022,
+        "Synovitis": 0.0073,
+        "Baker's": 0.014,
+        "Contusion": 0.0058,
+        "Fracture": 0.0064
+      },
+      "subgroups": {
+        "all FS planes": {
+          "auc": 0.8944,
+          "auc_diff": 0.0011
+        },
+        "no sagittal FS": {
+          "auc": 0.8654,
+          "auc_diff": 0.0085
+        },
+        "no coronal FS": {
+          "auc": 0.8373,
+          "auc_diff": -0.005
+        }
+      }
+    }
+  },
+  "attention": {
+    "ACL": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.358,
+          "profile": [
+            0.002,
+            0.006,
+            0.014,
+            0.029,
+            0.163,
+            0.398,
+            0.222,
+            0.13,
+            0.029,
+            0.005
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.249,
+          "profile": [
+            0.006,
+            0.005,
+            0.005,
+            0.025,
+            0.143,
+            0.389,
+            0.282,
+            0.087,
+            0.032,
+            0.025
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.234,
+          "profile": [
+            0.064,
+            0.078,
+            0.092,
+            0.13,
+            0.133,
+            0.107,
+            0.084,
+            0.107,
+            0.11,
+            0.094
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.099,
+          "profile": [
+            0.006,
+            0.008,
+            0.017,
+            0.033,
+            0.161,
+            0.452,
+            0.193,
+            0.094,
+            0.027,
+            0.011
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.111,
+          "profile": [
+            0.005,
+            0.006,
+            0.007,
+            0.021,
+            0.146,
+            0.419,
+            0.289,
+            0.067,
+            0.022,
+            0.019
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.038,
+          "profile": [
+            0.054,
+            0.08,
+            0.109,
+            0.143,
+            0.17,
+            0.103,
+            0.071,
+            0.094,
+            0.094,
+            0.084
+          ]
+        }
+      },
+      "profile_consistency": 0.636,
+      "mass_in_top18_windows": 0.72
+    },
+    "MCL": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.053,
+          "profile": [
+            0.005,
+            0.012,
+            0.029,
+            0.045,
+            0.113,
+            0.237,
+            0.27,
+            0.23,
+            0.05,
+            0.01
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.464,
+          "profile": [
+            0.017,
+            0.019,
+            0.018,
+            0.047,
+            0.165,
+            0.323,
+            0.218,
+            0.102,
+            0.055,
+            0.037
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.332,
+          "profile": [
+            0.067,
+            0.094,
+            0.118,
+            0.145,
+            0.131,
+            0.104,
+            0.082,
+            0.1,
+            0.089,
+            0.07
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.03,
+          "profile": [
+            0.014,
+            0.021,
+            0.045,
+            0.06,
+            0.113,
+            0.24,
+            0.236,
+            0.193,
+            0.055,
+            0.023
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.173,
+          "profile": [
+            0.017,
+            0.019,
+            0.019,
+            0.041,
+            0.162,
+            0.348,
+            0.236,
+            0.086,
+            0.04,
+            0.032
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.042,
+          "profile": [
+            0.078,
+            0.104,
+            0.138,
+            0.142,
+            0.13,
+            0.09,
+            0.069,
+            0.093,
+            0.085,
+            0.072
+          ]
+        }
+      },
+      "profile_consistency": 0.663,
+      "mass_in_top18_windows": 0.667
+    },
+    "Medial Meniscus": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.631,
+          "profile": [
+            0.026,
+            0.208,
+            0.408,
+            0.219,
+            0.045,
+            0.021,
+            0.019,
+            0.028,
+            0.021,
+            0.005
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.087,
+          "profile": [
+            0.032,
+            0.057,
+            0.07,
+            0.124,
+            0.192,
+            0.212,
+            0.164,
+            0.099,
+            0.035,
+            0.016
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.177,
+          "profile": [
+            0.061,
+            0.081,
+            0.098,
+            0.128,
+            0.142,
+            0.122,
+            0.1,
+            0.111,
+            0.092,
+            0.065
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.112,
+          "profile": [
+            0.034,
+            0.146,
+            0.334,
+            0.196,
+            0.091,
+            0.073,
+            0.052,
+            0.039,
+            0.022,
+            0.012
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.033,
+          "profile": [
+            0.045,
+            0.082,
+            0.1,
+            0.14,
+            0.193,
+            0.203,
+            0.121,
+            0.057,
+            0.035,
+            0.023
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.058,
+          "profile": [
+            0.066,
+            0.081,
+            0.11,
+            0.168,
+            0.209,
+            0.108,
+            0.071,
+            0.076,
+            0.061,
+            0.05
+          ]
+        }
+      },
+      "profile_consistency": 0.656,
+      "mass_in_top18_windows": 0.747
+    },
+    "Lateral Meniscus": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.312,
+          "profile": [
+            0.007,
+            0.015,
+            0.03,
+            0.036,
+            0.061,
+            0.142,
+            0.282,
+            0.322,
+            0.084,
+            0.021
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.336,
+          "profile": [
+            0.029,
+            0.028,
+            0.023,
+            0.047,
+            0.136,
+            0.298,
+            0.239,
+            0.111,
+            0.05,
+            0.039
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.197,
+          "profile": [
+            0.095,
+            0.116,
+            0.103,
+            0.098,
+            0.089,
+            0.078,
+            0.074,
+            0.114,
+            0.124,
+            0.107
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.141,
+          "profile": [
+            0.009,
+            0.014,
+            0.029,
+            0.044,
+            0.09,
+            0.191,
+            0.258,
+            0.257,
+            0.077,
+            0.03
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.057,
+          "profile": [
+            0.026,
+            0.029,
+            0.028,
+            0.045,
+            0.145,
+            0.331,
+            0.238,
+            0.084,
+            0.041,
+            0.034
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.031,
+          "profile": [
+            0.067,
+            0.079,
+            0.089,
+            0.095,
+            0.112,
+            0.096,
+            0.084,
+            0.125,
+            0.131,
+            0.122
+          ]
+        }
+      },
+      "profile_consistency": 0.637,
+      "mass_in_top18_windows": 0.599
+    },
+    "Medial OA": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.166,
+          "profile": [
+            0.021,
+            0.126,
+            0.252,
+            0.195,
+            0.108,
+            0.107,
+            0.079,
+            0.07,
+            0.033,
+            0.009
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.137,
+          "profile": [
+            0.029,
+            0.037,
+            0.037,
+            0.082,
+            0.201,
+            0.289,
+            0.182,
+            0.085,
+            0.036,
+            0.021
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.322,
+          "profile": [
+            0.052,
+            0.083,
+            0.116,
+            0.157,
+            0.155,
+            0.12,
+            0.093,
+            0.096,
+            0.076,
+            0.052
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.23,
+          "profile": [
+            0.017,
+            0.061,
+            0.151,
+            0.148,
+            0.166,
+            0.231,
+            0.129,
+            0.062,
+            0.024,
+            0.011
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.203,
+          "profile": [
+            0.022,
+            0.034,
+            0.041,
+            0.085,
+            0.215,
+            0.307,
+            0.181,
+            0.061,
+            0.031,
+            0.022
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.059,
+          "profile": [
+            0.051,
+            0.076,
+            0.126,
+            0.198,
+            0.22,
+            0.106,
+            0.064,
+            0.065,
+            0.053,
+            0.043
+          ]
+        }
+      },
+      "profile_consistency": 0.69,
+      "mass_in_top18_windows": 0.533
+    },
+    "Lateral OA": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.221,
+          "profile": [
+            0.008,
+            0.024,
+            0.058,
+            0.07,
+            0.086,
+            0.161,
+            0.238,
+            0.249,
+            0.085,
+            0.021
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.185,
+          "profile": [
+            0.025,
+            0.027,
+            0.025,
+            0.046,
+            0.131,
+            0.254,
+            0.208,
+            0.132,
+            0.087,
+            0.066
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.269,
+          "profile": [
+            0.044,
+            0.066,
+            0.086,
+            0.112,
+            0.118,
+            0.115,
+            0.111,
+            0.137,
+            0.12,
+            0.09
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.23,
+          "profile": [
+            0.011,
+            0.021,
+            0.054,
+            0.076,
+            0.107,
+            0.214,
+            0.243,
+            0.194,
+            0.058,
+            0.022
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.124,
+          "profile": [
+            0.022,
+            0.027,
+            0.027,
+            0.052,
+            0.161,
+            0.317,
+            0.223,
+            0.086,
+            0.047,
+            0.037
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.145,
+          "profile": [
+            0.042,
+            0.065,
+            0.097,
+            0.134,
+            0.161,
+            0.113,
+            0.089,
+            0.115,
+            0.1,
+            0.085
+          ]
+        }
+      },
+      "profile_consistency": 0.709,
+      "mass_in_top18_windows": 0.452
+    },
+    "PF OA": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.208,
+          "profile": [
+            0.021,
+            0.042,
+            0.06,
+            0.078,
+            0.132,
+            0.243,
+            0.21,
+            0.14,
+            0.052,
+            0.023
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.079,
+          "profile": [
+            0.071,
+            0.072,
+            0.051,
+            0.063,
+            0.14,
+            0.24,
+            0.167,
+            0.089,
+            0.061,
+            0.046
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.428,
+          "profile": [
+            0.085,
+            0.121,
+            0.134,
+            0.142,
+            0.129,
+            0.098,
+            0.076,
+            0.084,
+            0.074,
+            0.056
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.207,
+          "profile": [
+            0.026,
+            0.043,
+            0.077,
+            0.102,
+            0.148,
+            0.231,
+            0.175,
+            0.119,
+            0.051,
+            0.029
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.093,
+          "profile": [
+            0.048,
+            0.063,
+            0.057,
+            0.069,
+            0.151,
+            0.264,
+            0.178,
+            0.076,
+            0.051,
+            0.042
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.156,
+          "profile": [
+            0.053,
+            0.078,
+            0.114,
+            0.164,
+            0.204,
+            0.119,
+            0.072,
+            0.077,
+            0.066,
+            0.054
+          ]
+        }
+      },
+      "profile_consistency": 0.706,
+      "mass_in_top18_windows": 0.455
+    },
+    "Effusion": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.175,
+          "profile": [
+            0.039,
+            0.116,
+            0.182,
+            0.21,
+            0.129,
+            0.079,
+            0.074,
+            0.08,
+            0.064,
+            0.027
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.194,
+          "profile": [
+            0.043,
+            0.12,
+            0.173,
+            0.169,
+            0.137,
+            0.127,
+            0.096,
+            0.077,
+            0.039,
+            0.018
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.529,
+          "profile": [
+            0.175,
+            0.236,
+            0.2,
+            0.127,
+            0.087,
+            0.064,
+            0.039,
+            0.032,
+            0.024,
+            0.016
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.038,
+          "profile": [
+            0.06,
+            0.166,
+            0.223,
+            0.154,
+            0.09,
+            0.087,
+            0.073,
+            0.066,
+            0.049,
+            0.033
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.076,
+          "profile": [
+            0.084,
+            0.133,
+            0.134,
+            0.133,
+            0.12,
+            0.127,
+            0.104,
+            0.081,
+            0.053,
+            0.032
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.13,
+          "profile": [
+            0.187,
+            0.196,
+            0.163,
+            0.121,
+            0.102,
+            0.067,
+            0.05,
+            0.049,
+            0.037,
+            0.028
+          ]
+        }
+      },
+      "profile_consistency": 0.736,
+      "mass_in_top18_windows": 0.591
+    },
+    "Synovitis": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.091,
+          "profile": [
+            0.08,
+            0.101,
+            0.113,
+            0.114,
+            0.12,
+            0.137,
+            0.111,
+            0.103,
+            0.072,
+            0.05
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.185,
+          "profile": [
+            0.115,
+            0.144,
+            0.127,
+            0.123,
+            0.116,
+            0.116,
+            0.085,
+            0.076,
+            0.058,
+            0.04
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.391,
+          "profile": [
+            0.147,
+            0.184,
+            0.163,
+            0.12,
+            0.086,
+            0.071,
+            0.057,
+            0.064,
+            0.059,
+            0.05
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.138,
+          "profile": [
+            0.074,
+            0.103,
+            0.113,
+            0.102,
+            0.122,
+            0.155,
+            0.117,
+            0.094,
+            0.067,
+            0.054
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.25,
+          "profile": [
+            0.09,
+            0.121,
+            0.11,
+            0.103,
+            0.121,
+            0.155,
+            0.113,
+            0.085,
+            0.062,
+            0.04
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.094,
+          "profile": [
+            0.153,
+            0.152,
+            0.13,
+            0.112,
+            0.1,
+            0.081,
+            0.067,
+            0.077,
+            0.068,
+            0.06
+          ]
+        }
+      },
+      "profile_consistency": 0.678,
+      "mass_in_top18_windows": 0.399
+    },
+    "Baker's": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.023,
+          "profile": [
+            0.043,
+            0.048,
+            0.063,
+            0.124,
+            0.124,
+            0.155,
+            0.135,
+            0.119,
+            0.107,
+            0.081
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.151,
+          "profile": [
+            0.021,
+            0.04,
+            0.049,
+            0.043,
+            0.058,
+            0.098,
+            0.119,
+            0.168,
+            0.214,
+            0.19
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.517,
+          "profile": [
+            0.04,
+            0.062,
+            0.103,
+            0.152,
+            0.162,
+            0.176,
+            0.12,
+            0.085,
+            0.056,
+            0.043
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.236,
+          "profile": [
+            0.048,
+            0.087,
+            0.142,
+            0.148,
+            0.091,
+            0.098,
+            0.118,
+            0.136,
+            0.078,
+            0.053
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.046,
+          "profile": [
+            0.04,
+            0.061,
+            0.065,
+            0.073,
+            0.104,
+            0.151,
+            0.142,
+            0.152,
+            0.126,
+            0.086
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.292,
+          "profile": [
+            0.123,
+            0.177,
+            0.165,
+            0.097,
+            0.074,
+            0.083,
+            0.089,
+            0.084,
+            0.062,
+            0.046
+          ]
+        }
+      },
+      "profile_consistency": 0.58,
+      "mass_in_top18_windows": 0.64
+    },
+    "Contusion": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.241,
+          "profile": [
+            0.026,
+            0.091,
+            0.167,
+            0.129,
+            0.092,
+            0.126,
+            0.153,
+            0.149,
+            0.054,
+            0.013
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.325,
+          "profile": [
+            0.054,
+            0.068,
+            0.049,
+            0.073,
+            0.167,
+            0.26,
+            0.179,
+            0.086,
+            0.039,
+            0.025
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.409,
+          "profile": [
+            0.058,
+            0.071,
+            0.084,
+            0.115,
+            0.125,
+            0.102,
+            0.099,
+            0.134,
+            0.122,
+            0.091
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.028,
+          "profile": [
+            0.043,
+            0.073,
+            0.137,
+            0.134,
+            0.102,
+            0.143,
+            0.142,
+            0.133,
+            0.06,
+            0.033
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.024,
+          "profile": [
+            0.046,
+            0.067,
+            0.063,
+            0.079,
+            0.158,
+            0.255,
+            0.17,
+            0.073,
+            0.049,
+            0.038
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.029,
+          "profile": [
+            0.052,
+            0.067,
+            0.096,
+            0.129,
+            0.172,
+            0.114,
+            0.078,
+            0.102,
+            0.104,
+            0.085
+          ]
+        }
+      },
+      "profile_consistency": 0.551,
+      "mass_in_top18_windows": 0.639
+    },
+    "Fracture": {
+      "planes": {
+        "Sagittal FS": {
+          "mass": 0.121,
+          "profile": [
+            0.087,
+            0.112,
+            0.136,
+            0.121,
+            0.088,
+            0.091,
+            0.113,
+            0.124,
+            0.077,
+            0.05
+          ]
+        },
+        "Coronal FS": {
+          "mass": 0.316,
+          "profile": [
+            0.166,
+            0.137,
+            0.082,
+            0.1,
+            0.125,
+            0.135,
+            0.096,
+            0.072,
+            0.05,
+            0.036
+          ]
+        },
+        "Axial FS": {
+          "mass": 0.441,
+          "profile": [
+            0.09,
+            0.111,
+            0.111,
+            0.117,
+            0.11,
+            0.1,
+            0.094,
+            0.109,
+            0.091,
+            0.068
+          ]
+        },
+        "Sagittal non-FS": {
+          "mass": 0.083,
+          "profile": [
+            0.091,
+            0.09,
+            0.116,
+            0.124,
+            0.083,
+            0.081,
+            0.105,
+            0.135,
+            0.097,
+            0.079
+          ]
+        },
+        "Coronal non-FS": {
+          "mass": 0.058,
+          "profile": [
+            0.122,
+            0.142,
+            0.11,
+            0.109,
+            0.123,
+            0.122,
+            0.092,
+            0.082,
+            0.058,
+            0.041
+          ]
+        },
+        "Axial non-FS": {
+          "mass": 0.08,
+          "profile": [
+            0.106,
+            0.121,
+            0.123,
+            0.105,
+            0.111,
+            0.101,
+            0.084,
+            0.099,
+            0.084,
+            0.066
+          ]
+        }
+      },
+      "profile_consistency": 0.48,
+      "mass_in_top18_windows": 0.475
     }
   },
   "gold": {
@@ -440,6 +2024,29 @@
         "Baker's": 0.9783,
         "Contusion": 0.8907,
         "Fracture": 0.875
+      }
+    },
+    "convnext_atto@oracle": {
+      "studies": 58,
+      "windows": 72,
+      "macro_auc": 0.8999,
+      "macro_auc_95": [
+        0.8678,
+        0.9275
+      ],
+      "per_finding_auc": {
+        "ACL": 0.9669,
+        "MCL": 0.9592,
+        "Medial Meniscus": 0.9279,
+        "Lateral Meniscus": 0.8149,
+        "Medial OA": 0.9767,
+        "Lateral OA": 0.8375,
+        "PF OA": 0.8031,
+        "Effusion": 0.9317,
+        "Synovitis": 0.8005,
+        "Baker's": 0.9692,
+        "Contusion": 0.9379,
+        "Fracture": 0.8736
       }
     }
   }

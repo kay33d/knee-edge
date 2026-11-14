@@ -32,6 +32,8 @@ Written before the runs, so the go/no-go rule cannot be fitted to the results.
 
 **Note added 2026-11-14, after the A2 result and before the oracle result.** The A4 rule above stays as written. But centre-weighted placement at 18 windows, with no selector, scored 0.871 AUC against 0.890 for 72 evenly spaced windows, already inside the 0.02 line. Passing A4 therefore cannot by itself justify Phase B. Phase B will go ahead only if the oracle at 18 windows also beats centre-weighted placement at 18 windows by more than the 0.01 tie margin in concordance, paired as usual. Centre-weighted placement becomes the baseline every selector must beat, and it will be checked on all 5 folds.
 
+**Phase A result, 2026-11-14.** The gate failed on both counts. The oracle's best 18-window AUC was 0.865, 0.024 below 72 evenly spaced windows. Top-18 per slot by attention scored the same concordance as centre-weighted placement (−0.015 each), and top-18 across the study did worse (−0.025). Phase B (the learned selector) is dropped. Retraining at 18 windows lost −0.028, against −0.055 for the model trained on 48, so the train/score mismatch explains about half the loss; placement explains more. ConvNeXt-Atto's gold AUC was 0.900, between ConvNeXt-Tiny (0.896) and Tiny with the transformer head (0.906).
+
 ## Factors
 
 **A. Encoder kind**

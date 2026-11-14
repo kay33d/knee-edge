@@ -332,7 +332,22 @@ def sampling_section():
         shown = label.split(" [")[0].replace("uniform", "evenly spaced").replace("centre,", "centre-weighted,")
         rows.append([shown, v["windows"], f"{v['c']:.4f}", "reference" if v["c_diff_ci"] == [0.0, 0.0] else f"{signed(v['c_diff'])} ({span(v['c_diff_ci'])})",
                      f"{v['auc']:.4f}", signed(v["menisci_c_diff"])])
-    return table(["Window placement", "Windows", "Concordance", "Against 72 evenly spaced (95% interval)", "AUC", "Menisci change"], rows), arms
+    main = table(["Window placement", "Windows", "Concordance", "Against 72 evenly spaced (95% interval)", "AUC", "Menisci change"], rows)
+    att = summary.get("attention")
+    att_table = table(["Finding", "Profile consistency", "Attention mass in the top 18 of 144 windows"],
+                      [[n, f"{v['profile_consistency']:.2f}", f"{v['mass_in_top18_windows']:.2f}"] for n, v in att.items()]) if att else None
+    groups = summary.get("subgroup_sizes", {})
+    sub_rows = [[label.split(" [")[0].replace("uniform", "evenly spaced").replace("centre,", "centre-weighted,"), arms[label]["windows"]]
+                + [f"{arms[label]['subgroups'][g]['auc']:.4f} ({signed(arms[label]['subgroups'][g]['auc_diff'])})" for g in groups]
+                for label in ("uniform, trained on 48 [72]", "uniform, trained on 48 [18]", "uniform, trained at budget [18]", "centre, trained on 48 [18]",
+                              "oracle, top by attention per slot [18]") if label in arms]
+    sub_table = table(["Window placement", "Windows"] + [f"{g} ({n} studies)" for g, n in groups.items()], sub_rows)
+    ranges = None
+    if att:
+        cons = [v["profile_consistency"] for v in att.values()]
+        mass = [v["mass_in_top18_windows"] for v in att.values()]
+        ranges = (min(cons), max(cons), min(mass), max(mass))
+    return main, {"arms": arms, "attention": att_table, "subgroups": sub_table, "ranges": ranges}
 
 
 def main():
@@ -346,7 +361,26 @@ def main():
     timing, t4 = timing_section()
     s5, s5_stats = stage5_section(fold_scores())
     gold, gold_info = gold_section()
-    sampling, arms = sampling_section()
+    sampling, extra = sampling_section()
+    arms = (extra or {}).get("arms")
+    oracle_ok = arms and "oracle, top by attention per slot [18]" in arms
+    if oracle_ok:
+        o18, c18, u72 = arms["oracle, top by attention per slot [18]"], arms["centre, trained on 48 [18]"], arms["uniform, trained on 48 [72]"]
+        g18 = arms["oracle, top by attention per study [18]"]
+        b18 = arms.get("uniform, trained at budget [18]")
+        a4_gap = u72["auc"] - max(o18["auc"], g18["auc"])
+        beats = o18["c_diff"] - c18["c_diff"]
+        verdict = (f"**Result.** The oracle did not pass either test. Its best 18-window AUC was {max(o18['auc'], g18['auc']):.4f}, "
+                   f"{a4_gap:.3f} below 72 evenly spaced windows, outside the 0.02 line set in advance. "
+                   f"Choosing within each slot scored no better than centre-weighted placement in concordance ({signed(o18['c_diff'])} against {signed(c18['c_diff'])}, a difference of {signed(beats)}), "
+                   f"and choosing across the whole study did worse ({signed(g18['c_diff'])}). The rule added after the centre-weighted result needed a gain above 0.01, so Phase B, "
+                   "the learned selector, does not go ahead. A selector trained to copy the model's attention could at best match the oracle, and the oracle only matches a fixed schedule that costs nothing. "
+                   "One reason shows in the findings: the oracle ranks windows by attention averaged over all 12 findings, which kept windows useful for most findings but dropped ones that effusion needs "
+                   f"(effusion {signed(o18['per_finding_c_diff']['Effusion'])} under the oracle against {signed(c18['per_finding_c_diff']['Effusion'])} centre-weighted).\n\n"
+                   + (f"Retraining at the budget helps but less than moving the windows: 18 evenly spaced windows trained at 18 lost {signed(b18['c_diff'])}, against "
+                      f"{signed(arms['uniform, trained on 48 [18]']['c_diff'])} for the model trained on 48, and {signed(c18['c_diff'])} for the model trained on 48 with centre-weighted windows. "
+                      "Training at the budget with centre-weighted windows has not been tried.\n" if b18 else ""))
+
 
     best_cnn = max((v for v in s2_scores.values() if v[1] not in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
     best_other = max((v for v in s2_scores.values() if v[1] in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
@@ -396,13 +430,16 @@ def main():
                      + f". The LLM report labels the models were trained on score {llm_auc:.3f}. Paired on the {n_common} studies that have both, the models are ahead of their training labels by "
                      + "; ".join(f"{signed(v[0])} ({span(v[1:3])}) for {k}" for k, v in paired.items())
                      + (". So the models do better than the labels they learned from, though the intervals come close to zero. " if above else ". Not every interval excludes zero. ")
-                     + "The weakest findings are " + " and ".join(sorted({n for v in worst.values() for n, _ in v})) + " (section 10).\n")
+                     + "The weakest findings across the models are " + (lambda w: ", ".join(w[:-1]) + " and " + w[-1])(sorted({n for v in worst.values() for n, _ in v})) + " (section 10).\n")
     place_line = ""
     if arms and "centre, trained on 48 [18]" in arms:
         u18, c18, c36 = arms["uniform, trained on 48 [18]"], arms["centre, trained on 48 [18]"], arms["centre, trained on 48 [36]"]
         place_line = (f"- **Where the windows go.** With 18 windows, placing them towards the middle of each series cut Atto's loss from {signed(u18['c_diff'])} to "
                       f"{signed(c18['c_diff'])}, and the menisci loss from {signed(u18['menisci_c_diff'])} to {signed(c18['menisci_c_diff'])}, with no retraining. "
-                      f"With 36 centre-weighted windows Atto matched 72 evenly spaced ones ({signed(c36['c_diff'])}), at half the CPU time. Fold 0 only (section 11).\n")
+                      f"With 36 centre-weighted windows Atto matched 72 evenly spaced ones ({signed(c36['c_diff'])}), at half the CPU time. "
+                      + (f"Picking the 18 windows the model attends to most, from a pass over all 144, did no better ({signed(arms['oracle, top by attention per slot [18]']['c_diff'])}), "
+                         "so a learned window selector is not worth building. " if "oracle, top by attention per slot [18]" in arms else "")
+                      + "Fold 0 only (section 11).\n")
     text = f"""# CPU-deployable knee MRI classification: project report
 
 Last rebuilt {date.today().isoformat()} by `results/build_report.py`. Tables and headline figures come from the result files. Fold 0, one training seed unless stated. Research work, not a clinical tool.
@@ -428,7 +465,7 @@ Where things stand:
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | {'Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7)' if have_qat else 'In progress: post-training INT8 measured, QAT running'} |
 | H4 | Label quality moves AUC more than encoder choice | Not tested yet: needs a second label set |
-| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | {'Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11)' if place_line else 'Running (section 11)'} |
+| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | {'Supported for a fixed centre-weighted schedule, in fold 0. Not supported for choosing by the model' + chr(39) + 's attention, which did no better than the fixed schedule, so no learned selector is built (section 11)' if oracle_ok else 'Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11)' if place_line else 'Running (section 11)'} |
 
 ## 3. Method
 
@@ -512,8 +549,11 @@ ConvNeXt-Atto trained on 48 windows, then scored with windows placed in differen
 
 {sampling or 'Running.'}
 
-The adaptive-selection plan in `study_design.md` set a go/no-go rule before these runs: build a learned selector only if the oracle at 18 windows comes within 0.02 AUC of 72 evenly spaced windows. Centre-weighted placement at 18 windows already comes close to that line without any selector, so a learned selector is worth building only if the oracle beats centre-weighted placement clearly.
+The adaptive-selection plan in `study_design.md` set a go/no-go rule before these runs: build a learned selector only if the oracle at 18 windows comes within 0.02 AUC of 72 evenly spaced windows. Centre-weighted placement at 18 windows already came close to that line without any selector, so a dated note added a second condition before the oracle result: the oracle must also beat centre-weighted placement by more than 0.01 in concordance.
 
+{verdict if oracle_ok else 'The oracle run is not in yet.'}
+{('### Where the attention goes' + chr(10) + chr(10) + 'From the dense pass (144 windows). Profile consistency is the mean correlation between each study' + chr(39) + 's attention-by-position profile and the average profile: 1 means every study attends to the same positions. Mass in the top 18 is how much of the attention the 18 highest windows hold.' + chr(10) + chr(10) + extra['attention'] + chr(10) + chr(10) + 'Attention is only partly consistent across studies (' + '{:.2f}-{:.2f}'.format(*extra['ranges'][:2]) + ') and spread out: the top 18 windows hold ' + '{:.2f}-{:.2f}'.format(*extra['ranges'][2:]) + ' of the attention, depending on the finding. For about half the findings, the top 18 windows hold less than 60% of the attention, which fits a fixed central schedule doing as well as picking windows per study.' + chr(10)) if extra and extra.get('attention') else ''}
+{('### Studies missing a fat-suppressed plane' + chr(10) + chr(10) + 'AUC within each group, with the change from 72 evenly spaced windows. The small groups have wide uncertainty and no intervals are given.' + chr(10) + chr(10) + extra['subgroups'] + chr(10)) if extra else ''}
 ## 12. Limits
 
 - Most comparisons use one fold and one seed. Folds differ by up to about 0.02 for the same model, so close models cannot be separated without the five-fold runs.
@@ -527,10 +567,11 @@ The adaptive-selection plan in `study_design.md` set a go/no-go rule before thes
 
 ## 13. Next steps
 
-1. Finish Phase A: the oracle run and the runs trained at each window budget.
-2. Check centre-weighted placement on all 5 folds, since it is now the baseline any selector must beat.
-3. Build the learned window selector (Phase B) only if the oracle clearly beats centre-weighted placement.
+1. Check centre-weighted placement at 18 and 36 windows on all 5 folds, scoring the saved Stage 5 models.
+2. Try training at the budget with centre-weighted windows, the one combination not yet run.
+3. Time centre-weighted Atto at 18 and 36 windows on the laptop, to state the accuracy for each CPU cost.
 4. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
+5. The learned window selector (Phase B) is dropped: the attention oracle did no better than a fixed schedule.
 """
     os.makedirs(f"{ROOT}/docs", exist_ok=True)
     with open(f"{ROOT}/docs/project_report.md", "w", encoding="utf-8", newline="\n") as handle:

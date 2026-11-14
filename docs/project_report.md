@@ -18,8 +18,8 @@ Where things stand:
 - **Transformer head.** On ConvNeXt-Tiny it scored +0.009 and +0.010 against the attention head in two training seeds, on the edge of the 0.01 tie margin.
 - **Quantization-aware training.** It did not reduce the INT8 loss. With Conv and MatMul conversion and percentile ranges, QAT weights scored Atto -0.001 against -0.000, Tiny -0.005 against -0.001, Tiny with transformer head -0.007 against -0.004 without QAT, all against FP32. With ONNX Runtime's default conversion and MinMax ranges, QAT helped Atto slightly but made both Tiny models worse (Atto -0.003 against -0.007, Tiny -0.045 against -0.034, Tiny with transformer head -0.050 against -0.033). Calibration after the core conversion was similar. This QAT is a simple version (3 epochs, learned ranges discarded), so a fuller version could still do better.
 - **Five folds.** ConvNeXt-Tiny with the transformer head beat ConvNeXt-Atto on all 5 folds, by +0.010 on average (range +0.005 to +0.017), at about 10 times the CPU time. The same model varies by up to 0.024 between folds, so single-fold gaps under about 0.01 should not be read as real. Cutting Atto to 18 evenly spaced windows cost -0.055 to -0.047 on every fold.
-- **Radiologist labels.** On the 58 gold studies, which no training or selection used, macro AUC against the official labels was ConvNeXt-Tiny 0.895; ConvNeXt-Tiny, transformer head 0.906. The LLM report labels the models were trained on score 0.870. Paired on the 57 studies that have both, the models are ahead of their training labels by +0.028 (+0.001 to +0.056) for ConvNeXt-Tiny; +0.038 (+0.008 to +0.067) for ConvNeXt-Tiny, transformer head. So the models do better than the labels they learned from, though the intervals come close to zero. The weakest findings are Lateral OA and Synovitis (section 10).
-- **Where the windows go.** With 18 windows, placing them towards the middle of each series cut Atto's loss from -0.055 to -0.015, and the menisci loss from -0.102 to -0.019, with no retraining. With 36 centre-weighted windows Atto matched 72 evenly spaced ones (+0.001), at half the CPU time. Fold 0 only (section 11).
+- **Radiologist labels.** On the 58 gold studies, which no training or selection used, macro AUC against the official labels was ConvNeXt-Tiny 0.895; ConvNeXt-Tiny, transformer head 0.906; ConvNeXt-Atto 0.900. The LLM report labels the models were trained on score 0.870. Paired on the 57 studies that have both, the models are ahead of their training labels by +0.028 (+0.001 to +0.056) for ConvNeXt-Tiny; +0.038 (+0.008 to +0.067) for ConvNeXt-Tiny, transformer head; +0.033 (+0.001 to +0.060) for ConvNeXt-Atto. So the models do better than the labels they learned from, though the intervals come close to zero. The weakest findings across the models are Lateral OA, PF OA and Synovitis (section 10).
+- **Where the windows go.** With 18 windows, placing them towards the middle of each series cut Atto's loss from -0.055 to -0.015, and the menisci loss from -0.102 to -0.019, with no retraining. With 36 centre-weighted windows Atto matched 72 evenly spaced ones (+0.001), at half the CPU time. Picking the 18 windows the model attends to most, from a pass over all 144, did no better (-0.015), so a learned window selector is not worth building. Fold 0 only (section 11).
 
 ## 2. Questions
 
@@ -29,7 +29,7 @@ Where things stand:
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7) |
 | H4 | Label quality moves AUC more than encoder choice | Not tested yet: needs a second label set |
-| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11) |
+| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | Supported for a fixed centre-weighted schedule, in fold 0. Not supported for choosing by the model's attention, which did no better than the fixed schedule, so no learned selector is built (section 11) |
 
 ## 3. Method
 
@@ -231,6 +231,7 @@ Saved fold 0 models scored on the 58 gold studies against the official radiologi
 | LLM report labels (training labels) | 57 | 0.8700 | - | reference |
 | ConvNeXt-Tiny | 58 | 0.8955 | 0.860 to 0.926 | +0.028 (+0.001 to +0.056) |
 | ConvNeXt-Tiny, transformer head | 58 | 0.9060 | 0.874 to 0.933 | +0.038 (+0.008 to +0.067) |
+| ConvNeXt-Atto | 58 | 0.8999 | 0.868 to 0.927 | +0.033 (+0.001 to +0.060) |
 
 ## 11. Window placement (Phase A, fold 0)
 
@@ -238,17 +239,64 @@ ConvNeXt-Atto trained on 48 windows, then scored with windows placed in differen
 
 | Window placement | Windows | Concordance | Against 72 evenly spaced (95% interval) | AUC | Menisci change |
 |---|---|---|---|---|---|
+| dense, all windows | 144 | 0.8423 | +0.005 (+0.001 to +0.009) | 0.8908 | +0.009 |
 | evenly spaced, trained on 48 | 72 | 0.8373 | reference | 0.8897 | +0.000 |
 | random, trained on 48 | 72 | 0.8320 | -0.005 (-0.012 to +0.002) | 0.8809 | -0.007 |
 | centre-weighted, trained on 48 | 72 | 0.8408 | +0.004 (-0.004 to +0.010) | 0.8898 | +0.005 |
+| evenly spaced, trained at budget | 72 | 0.8310 | -0.006 (-0.014 to +0.002) | 0.8892 | -0.000 |
+| oracle, top by attention per slot | 72 | 0.8405 | +0.003 (-0.003 to +0.008) | 0.8860 | +0.004 |
+| oracle, top by attention per study | 72 | 0.8422 | +0.005 (-0.000 to +0.010) | 0.8870 | +0.009 |
 | evenly spaced, trained on 48 | 36 | 0.8309 | -0.006 (-0.012 to +0.001) | 0.8787 | -0.011 |
 | random, trained on 48 | 36 | 0.8185 | -0.019 (-0.029 to -0.011) | 0.8713 | -0.020 |
 | centre-weighted, trained on 48 | 36 | 0.8388 | +0.001 (-0.005 to +0.008) | 0.8880 | -0.004 |
+| evenly spaced, trained at budget | 36 | 0.8327 | -0.005 (-0.013 to +0.003) | 0.8838 | -0.006 |
+| oracle, top by attention per slot | 36 | 0.8362 | -0.001 (-0.011 to +0.008) | 0.8765 | -0.005 |
+| oracle, top by attention per study | 36 | 0.8324 | -0.005 (-0.013 to +0.003) | 0.8766 | -0.001 |
 | evenly spaced, trained on 48 | 18 | 0.7821 | -0.055 (-0.068 to -0.043) | 0.8344 | -0.102 |
 | random, trained on 48 | 18 | 0.8012 | -0.036 (-0.049 to -0.024) | 0.8446 | -0.046 |
 | centre-weighted, trained on 48 | 18 | 0.8224 | -0.015 (-0.025 to -0.007) | 0.8705 | -0.019 |
+| evenly spaced, trained at budget | 18 | 0.8094 | -0.028 (-0.040 to -0.015) | 0.8601 | -0.081 |
+| oracle, top by attention per slot | 18 | 0.8224 | -0.015 (-0.027 to -0.004) | 0.8653 | -0.019 |
+| oracle, top by attention per study | 18 | 0.8126 | -0.025 (-0.036 to -0.014) | 0.8555 | -0.024 |
 
-The adaptive-selection plan in `study_design.md` set a go/no-go rule before these runs: build a learned selector only if the oracle at 18 windows comes within 0.02 AUC of 72 evenly spaced windows. Centre-weighted placement at 18 windows already comes close to that line without any selector, so a learned selector is worth building only if the oracle beats centre-weighted placement clearly.
+The adaptive-selection plan in `study_design.md` set a go/no-go rule before these runs: build a learned selector only if the oracle at 18 windows comes within 0.02 AUC of 72 evenly spaced windows. Centre-weighted placement at 18 windows already came close to that line without any selector, so a dated note added a second condition before the oracle result: the oracle must also beat centre-weighted placement by more than 0.01 in concordance.
+
+**Result.** The oracle did not pass either test. Its best 18-window AUC was 0.8653, 0.024 below 72 evenly spaced windows, outside the 0.02 line set in advance. Choosing within each slot scored no better than centre-weighted placement in concordance (-0.015 against -0.015, a difference of +0.000), and choosing across the whole study did worse (-0.025). The rule added after the centre-weighted result needed a gain above 0.01, so Phase B, the learned selector, does not go ahead. A selector trained to copy the model's attention could at best match the oracle, and the oracle only matches a fixed schedule that costs nothing. One reason shows in the findings: the oracle ranks windows by attention averaged over all 12 findings, which kept windows useful for most findings but dropped ones that effusion needs (effusion -0.071 under the oracle against -0.018 centre-weighted).
+
+Retraining at the budget helps but less than moving the windows: 18 evenly spaced windows trained at 18 lost -0.028, against -0.055 for the model trained on 48, and -0.015 for the model trained on 48 with centre-weighted windows. Training at the budget with centre-weighted windows has not been tried.
+
+### Where the attention goes
+
+From the dense pass (144 windows). Profile consistency is the mean correlation between each study's attention-by-position profile and the average profile: 1 means every study attends to the same positions. Mass in the top 18 is how much of the attention the 18 highest windows hold.
+
+| Finding | Profile consistency | Attention mass in the top 18 of 144 windows |
+|---|---|---|
+| ACL | 0.64 | 0.72 |
+| MCL | 0.66 | 0.67 |
+| Medial Meniscus | 0.66 | 0.75 |
+| Lateral Meniscus | 0.64 | 0.60 |
+| Medial OA | 0.69 | 0.53 |
+| Lateral OA | 0.71 | 0.45 |
+| PF OA | 0.71 | 0.46 |
+| Effusion | 0.74 | 0.59 |
+| Synovitis | 0.68 | 0.40 |
+| Baker's | 0.58 | 0.64 |
+| Contusion | 0.55 | 0.64 |
+| Fracture | 0.48 | 0.47 |
+
+Attention is only partly consistent across studies (0.48-0.74) and spread out: the top 18 windows hold 0.40-0.75 of the attention, depending on the finding. For about half the findings, the top 18 windows hold less than 60% of the attention, which fits a fixed central schedule doing as well as picking windows per study.
+
+### Studies missing a fat-suppressed plane
+
+AUC within each group, with the change from 72 evenly spaced windows. The small groups have wide uncertainty and no intervals are given.
+
+| Window placement | Windows | all FS planes (789 studies) | no sagittal FS (49 studies) | no coronal FS (32 studies) |
+|---|---|---|---|---|
+| evenly spaced, trained on 48 | 72 | 0.8933 (+0.000) | 0.8568 (+0.000) | 0.8423 (+0.000) |
+| evenly spaced, trained on 48 | 18 | 0.8409 (-0.052) | 0.7854 (-0.071) | 0.7666 (-0.076) |
+| evenly spaced, trained at budget | 18 | 0.8664 (-0.027) | 0.8309 (-0.026) | 0.7920 (-0.050) |
+| centre-weighted, trained on 48 | 18 | 0.8738 (-0.019) | 0.8418 (-0.015) | 0.8159 (-0.026) |
+| oracle, top by attention per slot | 18 | 0.8704 (-0.023) | 0.8319 (-0.025) | 0.8115 (-0.031) |
 
 ## 12. Limits
 
@@ -263,7 +311,8 @@ The adaptive-selection plan in `study_design.md` set a go/no-go rule before thes
 
 ## 13. Next steps
 
-1. Finish Phase A: the oracle run and the runs trained at each window budget.
-2. Check centre-weighted placement on all 5 folds, since it is now the baseline any selector must beat.
-3. Build the learned window selector (Phase B) only if the oracle clearly beats centre-weighted placement.
+1. Check centre-weighted placement at 18 and 36 windows on all 5 folds, scoring the saved Stage 5 models.
+2. Try training at the budget with centre-weighted windows, the one combination not yet run.
+3. Time centre-weighted Atto at 18 and 36 windows on the laptop, to state the accuracy for each CPU cost.
 4. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
+5. The learned window selector (Phase B) is dropped: the attention oracle did no better than a fixed schedule.
