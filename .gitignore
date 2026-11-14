@@ -8,6 +8,7 @@ results/*
 !results/*.py
 !results/stage4_summary.json
 !results/phasea_summary.json
+!results/placement_summary.json
 !results/stage1_summary.json
 !results/stage1_pi5-class.json
 !results/stage1_orin-class-cpu.json
