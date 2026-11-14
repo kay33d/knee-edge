@@ -34,6 +34,8 @@ Written before the runs, so the go/no-go rule cannot be fitted to the results.
 
 **Phase A result, 2026-11-14.** The gate failed on both counts. The oracle's best 18-window AUC was 0.865, 0.024 below 72 evenly spaced windows. Top-18 per slot by attention scored the same concordance as centre-weighted placement (−0.015 each), and top-18 across the study did worse (−0.025). Phase B (the learned selector) is dropped. Retraining at 18 windows lost −0.028, against −0.055 for the model trained on 48, so the train/score mismatch explains about half the loss; placement explains more. ConvNeXt-Atto's gold AUC was 0.900, between ConvNeXt-Tiny (0.896) and Tiny with the transformer head (0.906).
 
+**Placement result on 5 folds, 2026-11-14.** Evenly spaced scoring includes both series ends. At 18 windows, against 72 evenly spaced: evenly spaced −0.051, midpoint −0.028, centre-weighted −0.017 (−0.021 to −0.013). Midpoint beat evenly spaced by +0.023 and centre-weighted beat midpoint by +0.011 (+0.006 to +0.015), each on every fold. At 36 windows centre-weighted lost −0.003, a tie at half the CPU time; at 72 placement does not matter. Trained and scored at 18 centre-weighted windows (fold 0 only), Atto lost −0.007. The fold 0 run hit the 12 h limit before scoring extra placements for the model trained at 72; its main placements finished.
+
 ## Factors
 
 **A. Encoder kind**

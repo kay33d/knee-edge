@@ -1,0 +1,968 @@
+{
+  "reference": "each fold's ConvNeXt-Atto at 72 evenly spaced windows",
+  "five_folds": {
+    "uniform [72]": {
+      "placement": "uniform",
+      "windows": 72,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "auc_diff_by_fold": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "c_by_fold": [
+        0.8373,
+        0.8404,
+        0.8393,
+        0.8325,
+        0.8565
+      ],
+      "c_diff_mean": 0.0,
+      "c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "auc_diff_mean": 0.0,
+      "auc_mean": 0.8837,
+      "menisci_c_diff_mean": 0.0,
+      "menisci_c_diff_ci": [
+        0.0,
+        0.0
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": 0.0,
+        "MCL": 0.0,
+        "Medial Meniscus": 0.0,
+        "Lateral Meniscus": 0.0,
+        "Medial OA": 0.0,
+        "Lateral OA": 0.0,
+        "PF OA": 0.0,
+        "Effusion": 0.0,
+        "Synovitis": 0.0,
+        "Baker's": 0.0,
+        "Contusion": 0.0,
+        "Fracture": 0.0
+      }
+    },
+    "midpoint [72]": {
+      "placement": "midpoint",
+      "windows": 72,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        0.0009,
+        0.0009,
+        0.0022,
+        0.0017,
+        -0.001
+      ],
+      "auc_diff_by_fold": [
+        0.0009,
+        0.0009,
+        0.0004,
+        -0.0007,
+        -0.0003
+      ],
+      "c_by_fold": [
+        0.8382,
+        0.8412,
+        0.8415,
+        0.8343,
+        0.8555
+      ],
+      "c_diff_mean": 0.0009,
+      "c_diff_ci": [
+        -0.0009,
+        0.0031
+      ],
+      "auc_diff_mean": 0.0003,
+      "auc_mean": 0.884,
+      "menisci_c_diff_mean": 0.0017,
+      "menisci_c_diff_ci": [
+        -0.0014,
+        0.0047
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": 0.0009,
+        "MCL": 0.0002,
+        "Medial Meniscus": -0.0015,
+        "Lateral Meniscus": 0.0048,
+        "Medial OA": -0.0003,
+        "Lateral OA": -0.0001,
+        "PF OA": 0.0025,
+        "Effusion": -0.0013,
+        "Synovitis": 0.0008,
+        "Baker's": 0.0012,
+        "Contusion": 0.0023,
+        "Fracture": 0.0018
+      }
+    },
+    "centre [72]": {
+      "placement": "centre",
+      "windows": 72,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        0.0035,
+        -0.0045,
+        0.0036,
+        0.0006,
+        -0.0005
+      ],
+      "auc_diff_by_fold": [
+        0.0001,
+        -0.0042,
+        0.0022,
+        -0.0007,
+        -0.0018
+      ],
+      "c_by_fold": [
+        0.8408,
+        0.8359,
+        0.843,
+        0.8332,
+        0.856
+      ],
+      "c_diff_mean": 0.0006,
+      "c_diff_ci": [
+        -0.0023,
+        0.0034
+      ],
+      "auc_diff_mean": -0.0009,
+      "auc_mean": 0.8829,
+      "menisci_c_diff_mean": 0.0,
+      "menisci_c_diff_ci": [
+        -0.0043,
+        0.0034
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": 0.0057,
+        "MCL": -0.0002,
+        "Medial Meniscus": -0.0021,
+        "Lateral Meniscus": 0.0022,
+        "Medial OA": 0.001,
+        "Lateral OA": 0.0018,
+        "PF OA": -0.0015,
+        "Effusion": -0.0048,
+        "Synovitis": -0.004,
+        "Baker's": -0.0023,
+        "Contusion": 0.0031,
+        "Fracture": 0.0076
+      }
+    },
+    "uniform [36]": {
+      "placement": "uniform",
+      "windows": 36,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        -0.0065,
+        -0.0133,
+        -0.0095,
+        -0.0133,
+        -0.0134
+      ],
+      "auc_diff_by_fold": [
+        -0.011,
+        -0.01,
+        -0.0097,
+        -0.0085,
+        -0.0133
+      ],
+      "c_by_fold": [
+        0.8308,
+        0.8271,
+        0.8299,
+        0.8192,
+        0.843
+      ],
+      "c_diff_mean": -0.0112,
+      "c_diff_ci": [
+        -0.014,
+        -0.0078
+      ],
+      "auc_diff_mean": -0.0105,
+      "auc_mean": 0.8732,
+      "menisci_c_diff_mean": -0.0167,
+      "menisci_c_diff_ci": [
+        -0.0218,
+        -0.0116
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": -0.034,
+        "MCL": -0.008,
+        "Medial Meniscus": -0.0152,
+        "Lateral Meniscus": -0.0183,
+        "Medial OA": -0.0111,
+        "Lateral OA": -0.0082,
+        "PF OA": -0.0051,
+        "Effusion": -0.008,
+        "Synovitis": -0.0096,
+        "Baker's": -0.0045,
+        "Contusion": -0.0127,
+        "Fracture": 0.0002
+      }
+    },
+    "midpoint [36]": {
+      "placement": "midpoint",
+      "windows": 36,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        -0.0012,
+        -0.0064,
+        -0.0058,
+        -0.0084,
+        -0.0102
+      ],
+      "auc_diff_by_fold": [
+        -0.0037,
+        -0.0081,
+        -0.0054,
+        -0.0076,
+        -0.0084
+      ],
+      "c_by_fold": [
+        0.8361,
+        0.834,
+        0.8335,
+        0.8242,
+        0.8462
+      ],
+      "c_diff_mean": -0.0064,
+      "c_diff_ci": [
+        -0.0092,
+        -0.0035
+      ],
+      "auc_diff_mean": -0.0066,
+      "auc_mean": 0.8771,
+      "menisci_c_diff_mean": -0.0057,
+      "menisci_c_diff_ci": [
+        -0.0102,
+        -0.0015
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": -0.0221,
+        "MCL": -0.0046,
+        "Medial Meniscus": -0.0084,
+        "Lateral Meniscus": -0.003,
+        "Medial OA": -0.0057,
+        "Lateral OA": -0.0092,
+        "PF OA": -0.0049,
+        "Effusion": -0.0055,
+        "Synovitis": 0.0056,
+        "Baker's": -0.0039,
+        "Contusion": -0.0057,
+        "Fracture": -0.0093
+      }
+    },
+    "centre [36]": {
+      "placement": "centre",
+      "windows": 36,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        0.0015,
+        -0.0066,
+        -0.0,
+        -0.003,
+        -0.0061
+      ],
+      "auc_diff_by_fold": [
+        -0.0017,
+        -0.0066,
+        -0.0024,
+        -0.0045,
+        -0.0063
+      ],
+      "c_by_fold": [
+        0.8388,
+        0.8337,
+        0.8393,
+        0.8295,
+        0.8503
+      ],
+      "c_diff_mean": -0.0029,
+      "c_diff_ci": [
+        -0.0057,
+        0.0005
+      ],
+      "auc_diff_mean": -0.0043,
+      "auc_mean": 0.8795,
+      "menisci_c_diff_mean": -0.006,
+      "menisci_c_diff_ci": [
+        -0.0105,
+        -0.0016
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": 0.0025,
+        "MCL": 0.0001,
+        "Medial Meniscus": -0.0091,
+        "Lateral Meniscus": -0.003,
+        "Medial OA": -0.0038,
+        "Lateral OA": -0.0002,
+        "PF OA": -0.0028,
+        "Effusion": -0.009,
+        "Synovitis": -0.0024,
+        "Baker's": -0.0085,
+        "Contusion": -0.0043,
+        "Fracture": 0.0063
+      }
+    },
+    "uniform [18]": {
+      "placement": "uniform",
+      "windows": 18,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        -0.0553,
+        -0.0502,
+        -0.0472,
+        -0.0553,
+        -0.0465
+      ],
+      "auc_diff_by_fold": [
+        -0.0553,
+        -0.0488,
+        -0.0503,
+        -0.052,
+        -0.0434
+      ],
+      "c_by_fold": [
+        0.782,
+        0.7902,
+        0.7922,
+        0.7773,
+        0.8099
+      ],
+      "c_diff_mean": -0.0509,
+      "c_diff_ci": [
+        -0.0559,
+        -0.0456
+      ],
+      "auc_diff_mean": -0.05,
+      "auc_mean": 0.8338,
+      "menisci_c_diff_mean": -0.1121,
+      "menisci_c_diff_ci": [
+        -0.1228,
+        -0.1021
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": -0.033,
+        "MCL": -0.0631,
+        "Medial Meniscus": -0.1284,
+        "Lateral Meniscus": -0.0959,
+        "Medial OA": -0.0314,
+        "Lateral OA": -0.0375,
+        "PF OA": -0.0431,
+        "Effusion": -0.0438,
+        "Synovitis": -0.0136,
+        "Baker's": -0.0319,
+        "Contusion": -0.0608,
+        "Fracture": -0.0283
+      }
+    },
+    "midpoint [18]": {
+      "placement": "midpoint",
+      "windows": 18,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        -0.0233,
+        -0.0332,
+        -0.0255,
+        -0.0292,
+        -0.0282
+      ],
+      "auc_diff_by_fold": [
+        -0.0275,
+        -0.026,
+        -0.0229,
+        -0.0234,
+        -0.0216
+      ],
+      "c_by_fold": [
+        0.814,
+        0.8072,
+        0.8139,
+        0.8033,
+        0.8283
+      ],
+      "c_diff_mean": -0.0279,
+      "c_diff_ci": [
+        -0.0322,
+        -0.0233
+      ],
+      "auc_diff_mean": -0.0243,
+      "auc_mean": 0.8595,
+      "menisci_c_diff_mean": -0.0328,
+      "menisci_c_diff_ci": [
+        -0.0407,
+        -0.0249
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": -0.0254,
+        "MCL": -0.0402,
+        "Medial Meniscus": -0.0327,
+        "Lateral Meniscus": -0.0328,
+        "Medial OA": -0.0163,
+        "Lateral OA": -0.0199,
+        "PF OA": -0.0209,
+        "Effusion": -0.0175,
+        "Synovitis": -0.0397,
+        "Baker's": -0.0417,
+        "Contusion": -0.0285,
+        "Fracture": -0.0188
+      }
+    },
+    "centre [18]": {
+      "placement": "centre",
+      "windows": 18,
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_by_fold": [
+        -0.0149,
+        -0.0175,
+        -0.0178,
+        -0.0153,
+        -0.0193
+      ],
+      "auc_diff_by_fold": [
+        -0.0192,
+        -0.0177,
+        -0.0138,
+        -0.015,
+        -0.0169
+      ],
+      "c_by_fold": [
+        0.8224,
+        0.8229,
+        0.8215,
+        0.8172,
+        0.8372
+      ],
+      "c_diff_mean": -0.017,
+      "c_diff_ci": [
+        -0.0212,
+        -0.0127
+      ],
+      "auc_diff_mean": -0.0165,
+      "auc_mean": 0.8672,
+      "menisci_c_diff_mean": -0.0225,
+      "menisci_c_diff_ci": [
+        -0.0295,
+        -0.0162
+      ],
+      "per_finding_c_diff_mean": {
+        "ACL": -0.0137,
+        "MCL": -0.0277,
+        "Medial Meniscus": -0.029,
+        "Lateral Meniscus": -0.0159,
+        "Medial OA": -0.0058,
+        "Lateral OA": -0.014,
+        "PF OA": -0.0094,
+        "Effusion": -0.025,
+        "Synovitis": -0.0144,
+        "Baker's": -0.02,
+        "Contusion": -0.0157,
+        "Fracture": -0.0128
+      }
+    }
+  },
+  "fold0_models": {
+    "trained at 18": {
+      "uniform [72]": {
+        "c": 0.8345,
+        "c_diff": -0.0028,
+        "c_diff_ci": [
+          -0.0098,
+          0.0049
+        ],
+        "auc": 0.8877,
+        "menisci_c_diff": -0.0021
+      },
+      "uniform [36]": {
+        "c": 0.8292,
+        "c_diff": -0.0081,
+        "c_diff_ci": [
+          -0.0169,
+          0.0004
+        ],
+        "auc": 0.8817,
+        "menisci_c_diff": -0.0093
+      },
+      "uniform [18]": {
+        "c": 0.8094,
+        "c_diff": -0.0279,
+        "c_diff_ci": [
+          -0.0397,
+          -0.0151
+        ],
+        "auc": 0.8601,
+        "menisci_c_diff": -0.0803
+      },
+      "midpoint [72]": {
+        "c": 0.8361,
+        "c_diff": -0.0012,
+        "c_diff_ci": [
+          -0.0087,
+          0.007
+        ],
+        "auc": 0.8886,
+        "menisci_c_diff": -0.0011
+      },
+      "midpoint [36]": {
+        "c": 0.8356,
+        "c_diff": -0.0017,
+        "c_diff_ci": [
+          -0.0096,
+          0.0065
+        ],
+        "auc": 0.8866,
+        "menisci_c_diff": -0.0022
+      },
+      "midpoint [18]": {
+        "c": 0.8276,
+        "c_diff": -0.0097,
+        "c_diff_ci": [
+          -0.0185,
+          0.0002
+        ],
+        "auc": 0.8759,
+        "menisci_c_diff": -0.024
+      },
+      "centre [72]": {
+        "c": 0.8362,
+        "c_diff": -0.0011,
+        "c_diff_ci": [
+          -0.0093,
+          0.0077
+        ],
+        "auc": 0.888,
+        "menisci_c_diff": -0.0095
+      },
+      "centre [36]": {
+        "c": 0.8343,
+        "c_diff": -0.003,
+        "c_diff_ci": [
+          -0.0113,
+          0.0066
+        ],
+        "auc": 0.8856,
+        "menisci_c_diff": -0.0097
+      },
+      "centre [18]": {
+        "c": 0.8292,
+        "c_diff": -0.0081,
+        "c_diff_ci": [
+          -0.0172,
+          0.0017
+        ],
+        "auc": 0.879,
+        "menisci_c_diff": -0.0239
+      }
+    },
+    "trained at 36": {
+      "uniform [72]": {
+        "c": 0.8404,
+        "c_diff": 0.0031,
+        "c_diff_ci": [
+          -0.0034,
+          0.0101
+        ],
+        "auc": 0.8919,
+        "menisci_c_diff": 0.011
+      },
+      "uniform [36]": {
+        "c": 0.8327,
+        "c_diff": -0.0046,
+        "c_diff_ci": [
+          -0.0127,
+          0.0033
+        ],
+        "auc": 0.8838,
+        "menisci_c_diff": -0.0054
+      },
+      "uniform [18]": {
+        "c": 0.7894,
+        "c_diff": -0.0479,
+        "c_diff_ci": [
+          -0.0619,
+          -0.0352
+        ],
+        "auc": 0.8399,
+        "menisci_c_diff": -0.1151
+      },
+      "midpoint [72]": {
+        "c": 0.8394,
+        "c_diff": 0.0021,
+        "c_diff_ci": [
+          -0.0051,
+          0.0098
+        ],
+        "auc": 0.8916,
+        "menisci_c_diff": 0.0105
+      },
+      "midpoint [36]": {
+        "c": 0.8368,
+        "c_diff": -0.0005,
+        "c_diff_ci": [
+          -0.0085,
+          0.0073
+        ],
+        "auc": 0.8894,
+        "menisci_c_diff": 0.0034
+      },
+      "midpoint [18]": {
+        "c": 0.8143,
+        "c_diff": -0.023,
+        "c_diff_ci": [
+          -0.034,
+          -0.0114
+        ],
+        "auc": 0.8644,
+        "menisci_c_diff": -0.031
+      },
+      "centre [72]": {
+        "c": 0.8383,
+        "c_diff": 0.001,
+        "c_diff_ci": [
+          -0.0066,
+          0.0095
+        ],
+        "auc": 0.8904,
+        "menisci_c_diff": 0.0006
+      },
+      "centre [36]": {
+        "c": 0.8373,
+        "c_diff": 0.0,
+        "c_diff_ci": [
+          -0.0084,
+          0.0091
+        ],
+        "auc": 0.8876,
+        "menisci_c_diff": 0.0006
+      },
+      "centre [18]": {
+        "c": 0.8235,
+        "c_diff": -0.0138,
+        "c_diff_ci": [
+          -0.0233,
+          -0.0037
+        ],
+        "auc": 0.8735,
+        "menisci_c_diff": -0.0208
+      }
+    },
+    "trained at 72": {
+      "uniform [72]": {
+        "c": 0.8313,
+        "c_diff": -0.006,
+        "c_diff_ci": [
+          -0.0139,
+          0.0018
+        ],
+        "auc": 0.8893,
+        "menisci_c_diff": -0.0
+      },
+      "uniform [36]": {
+        "c": 0.8199,
+        "c_diff": -0.0174,
+        "c_diff_ci": [
+          -0.0272,
+          -0.0091
+        ],
+        "auc": 0.8737,
+        "menisci_c_diff": -0.0147
+      },
+      "uniform [18]": {
+        "c": 0.767,
+        "c_diff": -0.0703,
+        "c_diff_ci": [
+          -0.083,
+          -0.0567
+        ],
+        "auc": 0.821,
+        "menisci_c_diff": -0.1226
+      }
+    },
+    "trained at 18, centre-weighted": {
+      "centre [18]": {
+        "c": 0.8307,
+        "c_diff": -0.0066,
+        "c_diff_ci": [
+          -0.0152,
+          0.0023
+        ],
+        "auc": 0.8818,
+        "menisci_c_diff": -0.0127
+      },
+      "uniform [18]": {
+        "c": 0.8081,
+        "c_diff": -0.0292,
+        "c_diff_ci": [
+          -0.0405,
+          -0.0171
+        ],
+        "auc": 0.8564,
+        "menisci_c_diff": -0.0724
+      },
+      "midpoint [18]": {
+        "c": 0.8217,
+        "c_diff": -0.0156,
+        "c_diff_ci": [
+          -0.025,
+          -0.0039
+        ],
+        "auc": 0.874,
+        "menisci_c_diff": -0.0265
+      }
+    }
+  },
+  "contrasts": {
+    "centre minus midpoint [72]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": -0.0004,
+      "c_diff_ci": [
+        -0.003,
+        0.0021
+      ],
+      "by_fold": [
+        0.0026,
+        -0.0054,
+        0.0015,
+        -0.0011,
+        0.0005
+      ]
+    },
+    "midpoint minus uniform [72]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0009,
+      "c_diff_ci": [
+        -0.0009,
+        0.0031
+      ],
+      "by_fold": [
+        0.0009,
+        0.0009,
+        0.0022,
+        0.0017,
+        -0.001
+      ]
+    },
+    "centre minus uniform [72]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0006,
+      "c_diff_ci": [
+        -0.0023,
+        0.0034
+      ],
+      "by_fold": [
+        0.0035,
+        -0.0045,
+        0.0036,
+        0.0006,
+        -0.0005
+      ]
+    },
+    "centre minus midpoint [36]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0035,
+      "c_diff_ci": [
+        0.0,
+        0.0072
+      ],
+      "by_fold": [
+        0.0027,
+        -0.0003,
+        0.0058,
+        0.0054,
+        0.0041
+      ]
+    },
+    "midpoint minus uniform [36]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0048,
+      "c_diff_ci": [
+        0.0011,
+        0.0083
+      ],
+      "by_fold": [
+        0.0052,
+        0.0069,
+        0.0037,
+        0.0049,
+        0.0032
+      ]
+    },
+    "centre minus uniform [36]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0083,
+      "c_diff_ci": [
+        0.0044,
+        0.0118
+      ],
+      "by_fold": [
+        0.0079,
+        0.0067,
+        0.0095,
+        0.0103,
+        0.0073
+      ]
+    },
+    "centre minus midpoint [18]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0109,
+      "c_diff_ci": [
+        0.0059,
+        0.0154
+      ],
+      "by_fold": [
+        0.0084,
+        0.0157,
+        0.0077,
+        0.0139,
+        0.0089
+      ]
+    },
+    "midpoint minus uniform [18]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.023,
+      "c_diff_ci": [
+        0.0178,
+        0.0284
+      ],
+      "by_fold": [
+        0.032,
+        0.017,
+        0.0217,
+        0.0261,
+        0.0183
+      ]
+    },
+    "centre minus uniform [18]": {
+      "folds": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "c_diff_mean": 0.0339,
+      "c_diff_ci": [
+        0.0282,
+        0.04
+      ],
+      "by_fold": [
+        0.0404,
+        0.0327,
+        0.0293,
+        0.0399,
+        0.0273
+      ]
+    }
+  }
+}

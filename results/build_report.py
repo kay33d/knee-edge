@@ -350,6 +350,47 @@ def sampling_section():
     return main, {"arms": arms, "attention": att_table, "subgroups": sub_table, "ranges": ranges}
 
 
+PLACE_NAMES = {"uniform": "evenly spaced, ends included", "midpoint": "midpoint", "centre": "centre-weighted"}
+
+
+def placement_section():
+    """Five-fold placement results, the fold 0 models trained at each budget, and accuracy against measured CPU time."""
+    s = read_json(f"{R}/placement_summary.json")
+    if not s or not s.get("five_folds"):
+        return None
+    out = {}
+    rows = []
+    for key, v in s["five_folds"].items():
+        rows.append([PLACE_NAMES[v["placement"]], v["windows"], len(v["folds"]),
+                     "reference" if v["c_diff_ci"] == [0.0, 0.0] else f"{signed(v['c_diff_mean'])} ({span(v['c_diff_ci'])})",
+                     " / ".join(signed(x) for x in v["c_diff_by_fold"]), f"{v['auc_mean']:.4f}", signed(v["menisci_c_diff_mean"])])
+    out["folds"] = table(["Placement", "Windows", "Folds", "Concordance change, mean (95% interval)", "Change by fold", "AUC, mean",
+                          "Menisci change"], rows)
+    out["contrasts"] = table(["Comparison", "Windows", "Concordance difference (95% interval)", "By fold"],
+                             [[k.split(" [")[0].replace("uniform", "evenly spaced").replace("centre", "centre-weighted"), k.split("[")[1].rstrip("]"),
+                               f"{signed(v['c_diff_mean'])} ({span(v['c_diff_ci'])})", " / ".join(signed(x) for x in v["by_fold"])]
+                              for k, v in s["contrasts"].items()])
+    rows = []
+    for name, arms in s.get("fold0_models", {}).items():
+        for arm, v in sorted(arms.items(), key=lambda kv: (-int(kv[0].split("[")[1].rstrip("]")), kv[0])):
+            mode, w = arm.split(" [")
+            rows.append([name, PLACE_NAMES[mode], w.rstrip("]"), f"{v['c']:.4f}", f"{signed(v['c_diff'])} ({span(v['c_diff_ci'])})", f"{v['auc']:.4f}",
+                         signed(v["menisci_c_diff"])])
+    out["fold0"] = table(["Model (fold 0)", "Placement", "Windows", "Concordance", "Against 72 evenly spaced (95% interval)", "AUC", "Menisci change"],
+                         rows) if rows else None
+    timing = {r["windows"]: r for r in read_json(f"{R}/stage3_timing_pi5-class.json") or [] if r.get("label") == "atto" and "error" not in r}
+    cost = []
+    for w in (72, 36, 18):
+        t = timing.get(w)
+        best = max((v for v in s["five_folds"].values() if v["windows"] == w), key=lambda v: v["c_diff_mean"], default=None)
+        if t and best:
+            cost.append([w, f"{t['total_s']:.2f}", PLACE_NAMES[best["placement"]], signed(best["c_diff_mean"]), f"{best['auc_mean']:.4f}"])
+    trained = s.get("fold0_models", {}).get("trained at 18, centre-weighted", {}).get("centre [18]")
+    out["cost"] = table(["Windows", "Atto s per study, 4 cores", f"Best placement ({len(next(iter(s['five_folds'].values()))['folds'])} folds)", "Concordance change", "AUC, mean"], cost)
+    out["summary"], out["trained"] = s, trained
+    return out
+
+
 def main():
     score = Scorer(f"{R}/stage3_atto_fold0/convnext_atto@eval/val_predictions.csv")
     s1 = stage1_section()
@@ -361,6 +402,7 @@ def main():
     timing, t4 = timing_section()
     s5, s5_stats = stage5_section(fold_scores())
     gold, gold_info = gold_section()
+    place = placement_section()
     sampling, extra = sampling_section()
     arms = (extra or {}).get("arms")
     oracle_ok = arms and "oracle, top by attention per slot [18]" in arms
@@ -379,7 +421,7 @@ def main():
                    f"(effusion {signed(o18['per_finding_c_diff']['Effusion'])} under the oracle against {signed(c18['per_finding_c_diff']['Effusion'])} centre-weighted).\n\n"
                    + (f"Retraining at the budget helps but less than moving the windows: 18 evenly spaced windows trained at 18 lost {signed(b18['c_diff'])}, against "
                       f"{signed(arms['uniform, trained on 48 [18]']['c_diff'])} for the model trained on 48, and {signed(c18['c_diff'])} for the model trained on 48 with centre-weighted windows. "
-                      "Training at the budget with centre-weighted windows has not been tried.\n" if b18 else ""))
+                      "Section 12 separates the effect of the series ends from centre-weighting across folds, and adds training at the budget with centre-weighted windows.\n" if b18 else ""))
 
 
     best_cnn = max((v for v in s2_scores.values() if v[1] not in ("Hybrid", "ViT")), key=lambda v: v[0])[0]
@@ -440,6 +482,31 @@ def main():
                       + (f"Picking the 18 windows the model attends to most, from a pass over all 144, did no better ({signed(arms['oracle, top by attention per slot [18]']['c_diff'])}), "
                          "so a learned window selector is not worth building. " if "oracle, top by attention per slot [18]" in arms else "")
                       + "Fold 0 only (section 11).\n")
+    place5_line, place_text = "", "Running: each fold's saved ConvNeXt-Atto scored with three placements."
+    if place:
+        ff, con = place["summary"]["five_folds"], place["summary"]["contrasts"]
+        at = lambda mode, w: ff.get(f"{mode} [{w}]")
+        cm = con.get("centre minus midpoint [18]")
+        n_f = len(at("centre", 18)["folds"]) if at("centre", 18) else 0
+        t = place["trained"]
+        place5_line = (f"- **Window placement on {n_f} folds.** Evenly spaced scoring includes both series ends, so at 18 windows two of each slot's three windows "
+                      f"sit at the very ends. At 18 windows: evenly spaced {signed(at('uniform', 18)['c_diff_mean'])}, midpoint (away from the ends) "
+                      f"{signed(at('midpoint', 18)['c_diff_mean'])}, centre-weighted {signed(at('centre', 18)['c_diff_mean'])}, against 72 evenly spaced windows. "
+                      f"Centre-weighted beat midpoint by {signed(cm['c_diff_mean'])} ({span(cm['c_diff_ci'])}), "
+                      + ("on every fold" if all(x > 0 for x in cm["by_fold"]) else "though not on every fold") + ". "
+                      + (f"Trained and scored on 18 centre-weighted windows (fold 0), Atto lost only {signed(t['c_diff'])} ({span(t['c_diff_ci'])}), "
+                         f"inside the 0.01 tie margin, at a quarter of the CPU time (section 12).\n" if t else "See section 12.\n"))
+        place_text = (f"Each fold's saved ConvNeXt-Atto (trained on 48 windows), scored with three placements and compared with the same model at 72 evenly spaced windows. "
+                      "\"Evenly spaced, ends included\" is the placement used everywhere above: with 3 windows per slot it puts two of them at 4% and 96% of the series. "
+                      "\"Midpoint\" puts each window in the middle of one of k equal parts of the series, which is where training draws fall on average. "
+                      "\"Centre-weighted\" packs them towards the middle. The mean interval averages one bootstrap draw per fold, so it covers study sampling, not retraining.\n\n"
+                      + place["folds"] + "\n\nPaired differences between placements, pooled over folds:\n\n" + place["contrasts"] + "\n\n"
+                      + ("Fold 0 models trained at each budget, and one trained on centre-weighted windows, scored against the same reference:\n\n" + place["fold0"] + "\n\n" if place["fold0"] else "")
+                      + "Accuracy against CPU cost for ConvNeXt-Atto (encoder plus head, FP32, from section 8; time is proportional to windows and does not depend on placement):\n\n"
+                      + place["cost"] + "\n\n"
+                      + "Two things are mixed in the Phase A comparison of section 11. Much of the loss at 18 evenly spaced windows came from the windows at the series ends, "
+                        "and midpoint placement removes that part. Centre-weighted placement then adds a further gain on top. Training at the budget with centre-weighted "
+                        "windows closes most of what remains, but that is one training run on one fold.\n")
     text = f"""# CPU-deployable knee MRI classification: project report
 
 Last rebuilt {date.today().isoformat()} by `results/build_report.py`. Tables and headline figures come from the result files. Fold 0, one training seed unless stated. Research work, not a clinical tool.
@@ -456,7 +523,7 @@ Where things stand:
 {int8_line('ConvNeXt-Atto', atto)}
 {int8_line('ConvNeXt-Tiny', tiny)}
 {int8_line('ConvNeXt-Tiny, transformer head', tf)}
-{timing_line}{head_line}{qat_line}{fold_line}{gold_line}{place_line}
+{timing_line}{head_line}{qat_line}{fold_line}{gold_line}{place_line}{place5_line}
 ## 2. Questions
 
 | ID | Hypothesis | Status |
@@ -465,7 +532,7 @@ Where things stand:
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | {'Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7)' if have_qat else 'In progress: post-training INT8 measured, QAT running'} |
 | H4 | Label quality moves AUC more than encoder choice | Not tested yet: needs a second label set |
-| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | {'Supported for a fixed centre-weighted schedule, in fold 0. Not supported for choosing by the model' + chr(39) + 's attention, which did no better than the fixed schedule, so no learned selector is built (section 11)' if oracle_ok else 'Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11)' if place_line else 'Running (section 11)'} |
+| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | {('Supported for a fixed centre-weighted schedule on ' + str(len(place['summary']['five_folds']['centre [18]']['folds'])) + ' folds, also against midpoint placement that avoids the series ends (section 12). ' if place else 'Supported for a fixed centre-weighted schedule, in fold 0. ') + 'Not supported for choosing by the model' + chr(39) + 's attention, which did no better than the fixed schedule, so no learned selector is built (section 11)' if oracle_ok else 'Fixed centre-weighted placement already does, in fold 0; whether a learned choice adds more waits for the oracle run (section 11)' if place_line else 'Running (section 11)'} |
 
 ## 3. Method
 
@@ -545,7 +612,7 @@ Saved fold 0 models scored on the 58 gold studies against the official radiologi
 
 ## 11. Window placement (Phase A, fold 0)
 
-ConvNeXt-Atto trained on 48 windows, then scored with windows placed in different ways. "Evenly spaced" is the Stage 2 placement. "Centre-weighted" packs windows towards the middle of each series. "Random" draws positions at random with a fixed seed. "Trained at budget" retrains with the same number of windows it is scored with. "Oracle" scores all 144 windows, then keeps the ones the model's attention ranks highest. It is an upper bound for any selector that imitates the model, not a usable method, because it costs the full dense pass. Menisci change is the mean concordance change for the two menisci.
+ConvNeXt-Atto trained on 48 windows, then scored with windows placed in different ways. "Evenly spaced" is the Stage 2 placement; it includes both series ends, which matters at 18 windows (section 12). "Centre-weighted" packs windows towards the middle of each series. "Random" draws positions at random with a fixed seed. "Trained at budget" retrains with the same number of windows it is scored with. "Oracle" scores all 144 windows, then keeps the ones the model's attention ranks highest. It is an upper bound for any selector that imitates the model, not a usable method, because it costs the full dense pass. Menisci change is the mean concordance change for the two menisci.
 
 {sampling or 'Running.'}
 
@@ -554,7 +621,10 @@ The adaptive-selection plan in `study_design.md` set a go/no-go rule before thes
 {verdict if oracle_ok else 'The oracle run is not in yet.'}
 {('### Where the attention goes' + chr(10) + chr(10) + 'From the dense pass (144 windows). Profile consistency is the mean correlation between each study' + chr(39) + 's attention-by-position profile and the average profile: 1 means every study attends to the same positions. Mass in the top 18 is how much of the attention the 18 highest windows hold.' + chr(10) + chr(10) + extra['attention'] + chr(10) + chr(10) + 'Attention is only partly consistent across studies (' + '{:.2f}-{:.2f}'.format(*extra['ranges'][:2]) + ') and spread out: the top 18 windows hold ' + '{:.2f}-{:.2f}'.format(*extra['ranges'][2:]) + ' of the attention, depending on the finding. For about half the findings, the top 18 windows hold less than 60% of the attention, which fits a fixed central schedule doing as well as picking windows per study.' + chr(10)) if extra and extra.get('attention') else ''}
 {('### Studies missing a fat-suppressed plane' + chr(10) + chr(10) + 'AUC within each group, with the change from 72 evenly spaced windows. The small groups have wide uncertainty and no intervals are given.' + chr(10) + chr(10) + extra['subgroups'] + chr(10)) if extra else ''}
-## 12. Limits
+## 12. Window placement across folds
+
+{place_text}
+## 13. Limits
 
 - Most comparisons use one fold and one seed. Folds differ by up to about 0.02 for the same model, so close models cannot be separated without the five-fold runs.
 - Timing describes this laptop under Docker limits, not a Raspberry Pi or Jetson, because Docker can limit cores and memory but not device speed.
@@ -565,12 +635,12 @@ The adaptive-selection plan in `study_design.md` set a go/no-go rule before thes
 - The QAT tested is simple: 3 epochs of fine-tuning, with the ranges it learns discarded before conversion. A fuller version that keeps them might close the small remaining gap.
 - Study-level data, labels and trained weights are not published here. The MIRA agreement limits redistribution, and whether trained weights count as derivatives still needs asking RSNA.
 
-## 13. Next steps
+## 14. Next steps
 
-1. Check centre-weighted placement at 18 and 36 windows on all 5 folds, scoring the saved Stage 5 models.
-2. Try training at the budget with centre-weighted windows, the one combination not yet run.
-3. Time centre-weighted Atto at 18 and 36 windows on the laptop, to state the accuracy for each CPU cost.
-4. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
+1. Train at 18 centre-weighted windows on folds 1-4, so the strongest cheap setting has five folds like the 72-window baseline.
+2. Score that setting on the gold studies.
+3. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
+4. Count DICOM reading and resampling in the CPU cost: with 18 windows only 54 slices per study need reading.
 5. The learned window selector (Phase B) is dropped: the attention oracle did no better than a fixed schedule.
 """
     os.makedirs(f"{ROOT}/docs", exist_ok=True)

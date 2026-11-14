@@ -20,6 +20,7 @@ Where things stand:
 - **Five folds.** ConvNeXt-Tiny with the transformer head beat ConvNeXt-Atto on all 5 folds, by +0.010 on average (range +0.005 to +0.017), at about 10 times the CPU time. The same model varies by up to 0.024 between folds, so single-fold gaps under about 0.01 should not be read as real. Cutting Atto to 18 evenly spaced windows cost -0.055 to -0.047 on every fold.
 - **Radiologist labels.** On the 58 gold studies, which no training or selection used, macro AUC against the official labels was ConvNeXt-Tiny 0.895; ConvNeXt-Tiny, transformer head 0.906; ConvNeXt-Atto 0.900. The LLM report labels the models were trained on score 0.870. Paired on the 57 studies that have both, the models are ahead of their training labels by +0.028 (+0.001 to +0.056) for ConvNeXt-Tiny; +0.038 (+0.008 to +0.067) for ConvNeXt-Tiny, transformer head; +0.033 (+0.001 to +0.060) for ConvNeXt-Atto. So the models do better than the labels they learned from, though the intervals come close to zero. The weakest findings across the models are Lateral OA, PF OA and Synovitis (section 10).
 - **Where the windows go.** With 18 windows, placing them towards the middle of each series cut Atto's loss from -0.055 to -0.015, and the menisci loss from -0.102 to -0.019, with no retraining. With 36 centre-weighted windows Atto matched 72 evenly spaced ones (+0.001), at half the CPU time. Picking the 18 windows the model attends to most, from a pass over all 144, did no better (-0.015), so a learned window selector is not worth building. Fold 0 only (section 11).
+- **Window placement on 5 folds.** Evenly spaced scoring includes both series ends, so at 18 windows two of each slot's three windows sit at the very ends. At 18 windows: evenly spaced -0.051, midpoint (away from the ends) -0.028, centre-weighted -0.017, against 72 evenly spaced windows. Centre-weighted beat midpoint by +0.011 (+0.006 to +0.015), on every fold. Trained and scored on 18 centre-weighted windows (fold 0), Atto lost only -0.007 (-0.015 to +0.002), inside the 0.01 tie margin, at a quarter of the CPU time (section 12).
 
 ## 2. Questions
 
@@ -29,7 +30,7 @@ Where things stand:
 | H2 | Cutting windows hurts focal findings more than global ones | Partly supported: see section 6 |
 | H3 | Post-training INT8 loses more discrimination and calibration than quantization-aware training, and the gap depends on model family | Not supported here: converting only Conv and MatMul keeps post-training INT8 within the tie margin for all three models, and QAT did not reduce the loss. The conversion mattered more than the model family (section 7) |
 | H4 | Label quality moves AUC more than encoder choice | Not tested yet: needs a second label set |
-| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | Supported for a fixed centre-weighted schedule, in fold 0. Not supported for choosing by the model's attention, which did no better than the fixed schedule, so no learned selector is built (section 11) |
+| H5 | At a fixed window budget, choosing windows beats evenly spaced windows | Supported for a fixed centre-weighted schedule on 5 folds, also against midpoint placement that avoids the series ends (section 12). Not supported for choosing by the model's attention, which did no better than the fixed schedule, so no learned selector is built (section 11) |
 
 ## 3. Method
 
@@ -235,7 +236,7 @@ Saved fold 0 models scored on the 58 gold studies against the official radiologi
 
 ## 11. Window placement (Phase A, fold 0)
 
-ConvNeXt-Atto trained on 48 windows, then scored with windows placed in different ways. "Evenly spaced" is the Stage 2 placement. "Centre-weighted" packs windows towards the middle of each series. "Random" draws positions at random with a fixed seed. "Trained at budget" retrains with the same number of windows it is scored with. "Oracle" scores all 144 windows, then keeps the ones the model's attention ranks highest. It is an upper bound for any selector that imitates the model, not a usable method, because it costs the full dense pass. Menisci change is the mean concordance change for the two menisci.
+ConvNeXt-Atto trained on 48 windows, then scored with windows placed in different ways. "Evenly spaced" is the Stage 2 placement; it includes both series ends, which matters at 18 windows (section 12). "Centre-weighted" packs windows towards the middle of each series. "Random" draws positions at random with a fixed seed. "Trained at budget" retrains with the same number of windows it is scored with. "Oracle" scores all 144 windows, then keeps the ones the model's attention ranks highest. It is an upper bound for any selector that imitates the model, not a usable method, because it costs the full dense pass. Menisci change is the mean concordance change for the two menisci.
 
 | Window placement | Windows | Concordance | Against 72 evenly spaced (95% interval) | AUC | Menisci change |
 |---|---|---|---|---|---|
@@ -263,7 +264,7 @@ The adaptive-selection plan in `study_design.md` set a go/no-go rule before thes
 
 **Result.** The oracle did not pass either test. Its best 18-window AUC was 0.8653, 0.024 below 72 evenly spaced windows, outside the 0.02 line set in advance. Choosing within each slot scored no better than centre-weighted placement in concordance (-0.015 against -0.015, a difference of +0.000), and choosing across the whole study did worse (-0.025). The rule added after the centre-weighted result needed a gain above 0.01, so Phase B, the learned selector, does not go ahead. A selector trained to copy the model's attention could at best match the oracle, and the oracle only matches a fixed schedule that costs nothing. One reason shows in the findings: the oracle ranks windows by attention averaged over all 12 findings, which kept windows useful for most findings but dropped ones that effusion needs (effusion -0.071 under the oracle against -0.018 centre-weighted).
 
-Retraining at the budget helps but less than moving the windows: 18 evenly spaced windows trained at 18 lost -0.028, against -0.055 for the model trained on 48, and -0.015 for the model trained on 48 with centre-weighted windows. Training at the budget with centre-weighted windows has not been tried.
+Retraining at the budget helps but less than moving the windows: 18 evenly spaced windows trained at 18 lost -0.028, against -0.055 for the model trained on 48, and -0.015 for the model trained on 48 with centre-weighted windows. Section 12 separates the effect of the series ends from centre-weighting across folds, and adds training at the budget with centre-weighted windows.
 
 ### Where the attention goes
 
@@ -298,7 +299,76 @@ AUC within each group, with the change from 72 evenly spaced windows. The small 
 | centre-weighted, trained on 48 | 18 | 0.8738 (-0.019) | 0.8418 (-0.015) | 0.8159 (-0.026) |
 | oracle, top by attention per slot | 18 | 0.8704 (-0.023) | 0.8319 (-0.025) | 0.8115 (-0.031) |
 
-## 12. Limits
+## 12. Window placement across folds
+
+Each fold's saved ConvNeXt-Atto (trained on 48 windows), scored with three placements and compared with the same model at 72 evenly spaced windows. "Evenly spaced, ends included" is the placement used everywhere above: with 3 windows per slot it puts two of them at 4% and 96% of the series. "Midpoint" puts each window in the middle of one of k equal parts of the series, which is where training draws fall on average. "Centre-weighted" packs them towards the middle. The mean interval averages one bootstrap draw per fold, so it covers study sampling, not retraining.
+
+| Placement | Windows | Folds | Concordance change, mean (95% interval) | Change by fold | AUC, mean | Menisci change |
+|---|---|---|---|---|---|---|
+| evenly spaced, ends included | 72 | 5 | reference | +0.000 / +0.000 / +0.000 / +0.000 / +0.000 | 0.8837 | +0.000 |
+| midpoint | 72 | 5 | +0.001 (-0.001 to +0.003) | +0.001 / +0.001 / +0.002 / +0.002 / -0.001 | 0.8840 | +0.002 |
+| centre-weighted | 72 | 5 | +0.001 (-0.002 to +0.003) | +0.004 / -0.004 / +0.004 / +0.001 / -0.001 | 0.8829 | +0.000 |
+| evenly spaced, ends included | 36 | 5 | -0.011 (-0.014 to -0.008) | -0.006 / -0.013 / -0.009 / -0.013 / -0.013 | 0.8732 | -0.017 |
+| midpoint | 36 | 5 | -0.006 (-0.009 to -0.004) | -0.001 / -0.006 / -0.006 / -0.008 / -0.010 | 0.8771 | -0.006 |
+| centre-weighted | 36 | 5 | -0.003 (-0.006 to +0.001) | +0.002 / -0.007 / -0.000 / -0.003 / -0.006 | 0.8795 | -0.006 |
+| evenly spaced, ends included | 18 | 5 | -0.051 (-0.056 to -0.046) | -0.055 / -0.050 / -0.047 / -0.055 / -0.046 | 0.8338 | -0.112 |
+| midpoint | 18 | 5 | -0.028 (-0.032 to -0.023) | -0.023 / -0.033 / -0.025 / -0.029 / -0.028 | 0.8595 | -0.033 |
+| centre-weighted | 18 | 5 | -0.017 (-0.021 to -0.013) | -0.015 / -0.018 / -0.018 / -0.015 / -0.019 | 0.8672 | -0.022 |
+
+Paired differences between placements, pooled over folds:
+
+| Comparison | Windows | Concordance difference (95% interval) | By fold |
+|---|---|---|---|
+| centre-weighted minus midpoint | 72 | -0.000 (-0.003 to +0.002) | +0.003 / -0.005 / +0.002 / -0.001 / +0.001 |
+| midpoint minus evenly spaced | 72 | +0.001 (-0.001 to +0.003) | +0.001 / +0.001 / +0.002 / +0.002 / -0.001 |
+| centre-weighted minus evenly spaced | 72 | +0.001 (-0.002 to +0.003) | +0.004 / -0.004 / +0.004 / +0.001 / -0.001 |
+| centre-weighted minus midpoint | 36 | +0.004 (+0.000 to +0.007) | +0.003 / -0.000 / +0.006 / +0.005 / +0.004 |
+| midpoint minus evenly spaced | 36 | +0.005 (+0.001 to +0.008) | +0.005 / +0.007 / +0.004 / +0.005 / +0.003 |
+| centre-weighted minus evenly spaced | 36 | +0.008 (+0.004 to +0.012) | +0.008 / +0.007 / +0.009 / +0.010 / +0.007 |
+| centre-weighted minus midpoint | 18 | +0.011 (+0.006 to +0.015) | +0.008 / +0.016 / +0.008 / +0.014 / +0.009 |
+| midpoint minus evenly spaced | 18 | +0.023 (+0.018 to +0.028) | +0.032 / +0.017 / +0.022 / +0.026 / +0.018 |
+| centre-weighted minus evenly spaced | 18 | +0.034 (+0.028 to +0.040) | +0.040 / +0.033 / +0.029 / +0.040 / +0.027 |
+
+Fold 0 models trained at each budget, and one trained on centre-weighted windows, scored against the same reference:
+
+| Model (fold 0) | Placement | Windows | Concordance | Against 72 evenly spaced (95% interval) | AUC | Menisci change |
+|---|---|---|---|---|---|---|
+| trained at 18 | centre-weighted | 72 | 0.8362 | -0.001 (-0.009 to +0.008) | 0.8880 | -0.009 |
+| trained at 18 | midpoint | 72 | 0.8361 | -0.001 (-0.009 to +0.007) | 0.8886 | -0.001 |
+| trained at 18 | evenly spaced, ends included | 72 | 0.8345 | -0.003 (-0.010 to +0.005) | 0.8877 | -0.002 |
+| trained at 18 | centre-weighted | 36 | 0.8343 | -0.003 (-0.011 to +0.007) | 0.8856 | -0.010 |
+| trained at 18 | midpoint | 36 | 0.8356 | -0.002 (-0.010 to +0.006) | 0.8866 | -0.002 |
+| trained at 18 | evenly spaced, ends included | 36 | 0.8292 | -0.008 (-0.017 to +0.000) | 0.8817 | -0.009 |
+| trained at 18 | centre-weighted | 18 | 0.8292 | -0.008 (-0.017 to +0.002) | 0.8790 | -0.024 |
+| trained at 18 | midpoint | 18 | 0.8276 | -0.010 (-0.018 to +0.000) | 0.8759 | -0.024 |
+| trained at 18 | evenly spaced, ends included | 18 | 0.8094 | -0.028 (-0.040 to -0.015) | 0.8601 | -0.080 |
+| trained at 36 | centre-weighted | 72 | 0.8383 | +0.001 (-0.007 to +0.009) | 0.8904 | +0.001 |
+| trained at 36 | midpoint | 72 | 0.8394 | +0.002 (-0.005 to +0.010) | 0.8916 | +0.011 |
+| trained at 36 | evenly spaced, ends included | 72 | 0.8404 | +0.003 (-0.003 to +0.010) | 0.8919 | +0.011 |
+| trained at 36 | centre-weighted | 36 | 0.8373 | +0.000 (-0.008 to +0.009) | 0.8876 | +0.001 |
+| trained at 36 | midpoint | 36 | 0.8368 | -0.001 (-0.009 to +0.007) | 0.8894 | +0.003 |
+| trained at 36 | evenly spaced, ends included | 36 | 0.8327 | -0.005 (-0.013 to +0.003) | 0.8838 | -0.005 |
+| trained at 36 | centre-weighted | 18 | 0.8235 | -0.014 (-0.023 to -0.004) | 0.8735 | -0.021 |
+| trained at 36 | midpoint | 18 | 0.8143 | -0.023 (-0.034 to -0.011) | 0.8644 | -0.031 |
+| trained at 36 | evenly spaced, ends included | 18 | 0.7894 | -0.048 (-0.062 to -0.035) | 0.8399 | -0.115 |
+| trained at 72 | evenly spaced, ends included | 72 | 0.8313 | -0.006 (-0.014 to +0.002) | 0.8893 | -0.000 |
+| trained at 72 | evenly spaced, ends included | 36 | 0.8199 | -0.017 (-0.027 to -0.009) | 0.8737 | -0.015 |
+| trained at 72 | evenly spaced, ends included | 18 | 0.7670 | -0.070 (-0.083 to -0.057) | 0.8210 | -0.123 |
+| trained at 18, centre-weighted | centre-weighted | 18 | 0.8307 | -0.007 (-0.015 to +0.002) | 0.8818 | -0.013 |
+| trained at 18, centre-weighted | midpoint | 18 | 0.8217 | -0.016 (-0.025 to -0.004) | 0.8740 | -0.026 |
+| trained at 18, centre-weighted | evenly spaced, ends included | 18 | 0.8081 | -0.029 (-0.041 to -0.017) | 0.8564 | -0.072 |
+
+Accuracy against CPU cost for ConvNeXt-Atto (encoder plus head, FP32, from section 8; time is proportional to windows and does not depend on placement):
+
+| Windows | Atto s per study, 4 cores | Best placement (5 folds) | Concordance change | AUC, mean |
+|---|---|---|---|---|
+| 72 | 0.96 | midpoint | +0.001 | 0.8840 |
+| 36 | 0.48 | centre-weighted | -0.003 | 0.8795 |
+| 18 | 0.24 | centre-weighted | -0.017 | 0.8672 |
+
+Two things are mixed in the Phase A comparison of section 11. Much of the loss at 18 evenly spaced windows came from the windows at the series ends, and midpoint placement removes that part. Centre-weighted placement then adds a further gain on top. Training at the budget with centre-weighted windows closes most of what remains, but that is one training run on one fold.
+
+## 13. Limits
 
 - Most comparisons use one fold and one seed. Folds differ by up to about 0.02 for the same model, so close models cannot be separated without the five-fold runs.
 - Timing describes this laptop under Docker limits, not a Raspberry Pi or Jetson, because Docker can limit cores and memory but not device speed.
@@ -309,10 +379,10 @@ AUC within each group, with the change from 72 evenly spaced windows. The small 
 - The QAT tested is simple: 3 epochs of fine-tuning, with the ranges it learns discarded before conversion. A fuller version that keeps them might close the small remaining gap.
 - Study-level data, labels and trained weights are not published here. The MIRA agreement limits redistribution, and whether trained weights count as derivatives still needs asking RSNA.
 
-## 13. Next steps
+## 14. Next steps
 
-1. Check centre-weighted placement at 18 and 36 windows on all 5 folds, scoring the saved Stage 5 models.
-2. Try training at the budget with centre-weighted windows, the one combination not yet run.
-3. Time centre-weighted Atto at 18 and 36 windows on the laptop, to state the accuracy for each CPU cost.
-4. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
+1. Train at 18 centre-weighted windows on folds 1-4, so the strongest cheap setting has five folds like the 72-window baseline.
+2. Score that setting on the gold studies.
+3. Test fat-suppressed series only against all 6 slots (Phase C), and a second label set for H4.
+4. Count DICOM reading and resampling in the CPU cost: with 18 windows only 54 slices per study need reading.
 5. The learned window selector (Phase B) is dropped: the attention oracle did no better than a fixed schedule.
